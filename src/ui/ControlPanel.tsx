@@ -1,313 +1,239 @@
-// ─── PANEL DE CONTROL DE PARÁMETROS FÍSICOS ──────────────────────────────────
-// Controles para los 7 parámetros del simulador en tiempo real.
-// Lee y escribe en Zustand — no toca Three.js ni hace física.
+// ─── PANEL DE CONTROL — TEMA CLARO ───────────────────────────────────────────
 
-import { useSimulationStore } from '../store/simulationStore'
+import type { CSSProperties } from 'react'
+import { useSimulationStore, selectParams, selectRunning } from '../store/simulationStore'
 import { getAllFluids } from '../physics/fluids'
 import type { FluidId } from '../types/physics.types'
 
-// ─── Componente de slider individual ─────────────────────────────────────────
+// ─── Tokens de color (tema claro) ────────────────────────────────────────────
+const T = {
+  orange:  '#f97316',
+  blue:    '#3b82f6',
+  violet:  '#8b5cf6',
+  amber:   '#d97706',
+  green:   '#16a34a',
+  indigo:  '#4f46e5',
+  red:     '#dc2626',
+  teal:    '#0d9488',
+  text:    '#1e293b',
+  muted:   '#64748b',
+  dim:     '#94a3b8',
+  border:  'rgba(15,23,42,0.09)',
+  bg:      '#f8fafc',
+  bgHover: '#f1f5f9',
+}
 
 interface SliderProps {
   label:    string
+  symbol:   string
   unit:     string
   value:    number
   min:      number
   max:      number
   step:     number
   digits?:  number
+  color?:   string
   onChange: (v: number) => void
 }
 
-function Slider({ label, unit, value, min, max, step, digits = 3, onChange }: SliderProps) {
+function Slider({ label, symbol, unit, value, min, max, step, digits = 3, color = T.orange, onChange }: SliderProps) {
   return (
-    <div style={styles.sliderRow}>
-      <div style={styles.sliderHeader}>
-        <span style={styles.sliderLabel}>{label}</span>
-        <span style={styles.sliderValue}>
-          {value.toFixed(digits)} <span style={styles.unit}>{unit}</span>
+    <div style={s.sliderWrap}>
+      <div style={s.sliderHeader}>
+        <span style={s.paramLabel}>
+          {label}
+          <span style={s.paramSymbol}> {symbol}</span>
+        </span>
+        <span style={{ ...s.paramValue, color }}>
+          {value.toFixed(digits)}
+          <span style={s.paramUnit}> {unit}</span>
         </span>
       </div>
       <input
         type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
+        min={min} max={max} step={step} value={value}
         onChange={e => onChange(parseFloat(e.target.value))}
-        style={styles.range}
+        style={s.range}
       />
     </div>
   )
 }
 
-// ─── Panel principal ──────────────────────────────────────────────────────────
-
-export function ControlPanel() {
-  const { params, setParams, running, setRunning, reset } = useSimulationStore()
-  const fluids = getAllFluids()
-
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={styles.panel}>
-      <div style={styles.header}>
-        <span style={styles.title}>Parámetros</span>
-        <div style={styles.controls}>
-          <button
-            style={{ ...styles.btn, ...(running ? styles.btnPause : styles.btnPlay) }}
-            onClick={() => setRunning(!running)}
-          >
-            {running ? '⏸' : '▶'}
-          </button>
-          <button style={{ ...styles.btn, ...styles.btnReset }} onClick={reset}>
-            ↺
-          </button>
-        </div>
-      </div>
-
-      <div style={styles.section}>
-        <span style={styles.sectionTitle}>Geometría</span>
-
-        <Slider
-          label="Longitud L"
-          unit="m"
-          value={params.L}
-          min={0.05} max={3.0} step={0.01} digits={2}
-          onChange={v => setParams({ L: v })}
-        />
-
-        <Slider
-          label="Masa extremo mᵣ"
-          unit="kg"
-          value={params.mr}
-          min={0.01} max={0.5} step={0.005} digits={3}
-          onChange={v => setParams({ mr: v })}
-        />
-
-        <Slider
-          label="Masa barra m"
-          unit="kg"
-          value={params.m}
-          min={0.001} max={0.2} step={0.001} digits={3}
-          onChange={v => setParams({ m: v })}
-        />
-      </div>
-
-      <div style={styles.section}>
-        <span style={styles.sectionTitle}>Condición inicial</span>
-
-        <Slider
-          label="Ángulo inicial θ₀"
-          unit="°"
-          value={params.theta0 * (180 / Math.PI)}
-          min={1} max={90} step={1} digits={0}
-          onChange={v => setParams({ theta0: v * (Math.PI / 180) })}
-        />
-      </div>
-
-      <div style={styles.section}>
-        <span style={styles.sectionTitle}>Entorno</span>
-
-        <div style={styles.sliderRow}>
-          <div style={styles.sliderHeader}>
-            <span style={styles.sliderLabel}>Fluido</span>
-          </div>
-          <div style={styles.fluidGrid}>
-            {fluids.map(f => (
-              <button
-                key={f.id}
-                style={{
-                  ...styles.fluidBtn,
-                  ...(params.fluid === f.id ? styles.fluidBtnActive : {}),
-                }}
-                onClick={() => setParams({ fluid: f.id as FluidId })}
-              >
-                {f.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <Slider
-          label="Temperatura"
-          unit="°C"
-          value={params.tempC}
-          min={0} max={100} step={1} digits={0}
-          onChange={v => setParams({ tempC: v })}
-        />
-
-        <Slider
-          label="Gravedad g"
-          unit="m/s²"
-          value={params.g}
-          min={1.6} max={24.8} step={0.01} digits={2}
-          onChange={v => setParams({ g: v })}
-        />
-
-        {/* Atajos de gravedad */}
-        <div style={styles.gravBtns}>
-          {GRAVITY_PRESETS.map(p => (
-            <button
-              key={p.label}
-              style={{
-                ...styles.gravBtn,
-                ...(Math.abs(params.g - p.g) < 0.01 ? styles.gravBtnActive : {}),
-              }}
-              onClick={() => setParams({ g: p.g })}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
+    <div style={s.section}>
+      <p style={s.sectionTitle}>{title}</p>
+      {children}
     </div>
   )
 }
 
-// ─── Presets de gravedad ──────────────────────────────────────────────────────
-
 const GRAVITY_PRESETS = [
-  { label: 'Luna',    g: 1.62  },
-  { label: 'Marte',   g: 3.72  },
-  { label: 'Medellín',g: 9.78  },
-  { label: 'Tierra',  g: 9.81  },
-  { label: 'Júpiter', g: 24.79 },
+  { label: 'Luna',      g: 1.62,  icon: '🌙' },
+  { label: 'Marte',     g: 3.72,  icon: '🔴' },
+  { label: 'Medellín',  g: 9.78,  icon: '🇨🇴' },
+  { label: 'Tierra',    g: 9.81,  icon: '🌍' },
+  { label: 'Júpiter',   g: 24.79, icon: '🪐' },
 ]
 
-// ─── Estilos inline (compatibles con dark mode via CSS vars) ──────────────────
+const FLUID_ICONS: Record<FluidId, string> = {
+  vacuum: '○', air: '~', water: '≋', oil: '◉', glycerin: '●',
+}
 
-const styles: Record<string, React.CSSProperties> = {
+export function ControlPanel() {
+  const params  = useSimulationStore(selectParams)
+  const running = useSimulationStore(selectRunning)
+  const { setParams, setRunning, reset } = useSimulationStore.getState()
+  const fluids = getAllFluids()
+  const theta0Deg = params.theta0 * (180 / Math.PI)
+
+  return (
+    <div style={s.panel}>
+
+      <div style={s.header}>
+        <span style={s.panelTitle}>Parámetros</span>
+        <div style={s.headerBtns}>
+          <button
+            style={{
+              ...s.iconBtn,
+              background:  running ? '#fef3c7' : '#dcfce7',
+              color:        running ? T.amber   : T.green,
+              borderColor: running ? '#fde68a' : '#86efac',
+            }}
+            onClick={() => setRunning(!running)}
+            title={running ? 'Pausar' : 'Reanudar'}
+          >{running ? '⏸' : '▶'}</button>
+
+          <button
+            style={{ ...s.iconBtn, background: '#ede9fe', color: T.indigo, borderColor: '#c4b5fd' }}
+            onClick={reset}
+            title="Reiniciar"
+          >↺</button>
+        </div>
+      </div>
+
+      <Section title="Geometría del péndulo">
+        <Slider label="Longitud"    symbol="L"  unit="m"
+          value={params.L}  min={0.05} max={3.0}  step={0.01} digits={2}
+          onChange={v => setParams({ L: v })} />
+        <Slider label="Masa extremo" symbol="mᵣ" unit="kg"
+          value={params.mr} min={0.01} max={0.5}  step={0.005} digits={3}
+          onChange={v => setParams({ mr: v })} />
+        <Slider label="Masa barra"  symbol="m"  unit="kg"
+          value={params.m}  min={0.001} max={0.2} step={0.001} digits={3}
+          color={T.blue}
+          onChange={v => setParams({ m: v })} />
+      </Section>
+
+      <Section title="Condición inicial">
+        <Slider label="Ángulo inicial" symbol="θ₀" unit="°"
+          value={theta0Deg} min={1} max={90} step={1} digits={0}
+          color={T.violet}
+          onChange={v => setParams({ theta0: v * (Math.PI / 180) })} />
+      </Section>
+
+      <Section title="Medio y temperatura">
+        <div style={s.fluidGrid}>
+          {fluids.map(f => {
+            const active = params.fluid === f.id
+            return (
+              <button key={f.id}
+                style={{ ...s.fluidBtn, ...(active ? s.fluidBtnActive : {}) }}
+                onClick={() => setParams({ fluid: f.id as FluidId })}
+              >
+                <span style={s.fluidIcon}>{FLUID_ICONS[f.id]}</span>
+                <span>{f.name}</span>
+              </button>
+            )
+          })}
+        </div>
+        <Slider label="Temperatura" symbol="T" unit="°C"
+          value={params.tempC} min={0} max={100} step={1} digits={0}
+          color={T.red}
+          onChange={v => setParams({ tempC: v })} />
+      </Section>
+
+      <Section title="Entorno gravitacional">
+        <Slider label="Gravedad" symbol="g" unit="m/s²"
+          value={params.g} min={1.6} max={24.8} step={0.01} digits={2}
+          color={T.teal}
+          onChange={v => setParams({ g: v })} />
+        <div style={s.presetGrid}>
+          {GRAVITY_PRESETS.map(({ label, g, icon }) => {
+            const active = Math.abs(params.g - g) < 0.05
+            return (
+              <button key={label}
+                style={{ ...s.presetBtn, ...(active ? s.presetBtnActive : {}) }}
+                onClick={() => setParams({ g })} title={`g = ${g} m/s²`}
+              >
+                <span style={{ fontSize: '13px' }}>{icon}</span>
+                <span style={{ fontSize: '9px', color: T.muted }}>{label}</span>
+                <span style={{ fontSize: '9px', color: active ? T.teal : T.dim, fontVariantNumeric: 'tabular-nums' }}>{g}</span>
+              </button>
+            )
+          })}
+        </div>
+      </Section>
+
+    </div>
+  )
+}
+
+const s: Record<string, CSSProperties> = {
   panel: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-    padding: '12px',
-    overflowY: 'auto',
-    height: '100%',
-    boxSizing: 'border-box',
+    display: 'flex', flexDirection: 'column', gap: '2px',
+    padding: '13px 12px', height: '100%', overflowY: 'auto', boxSizing: 'border-box',
   },
   header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '4px',
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px',
   },
-  title: {
-    fontSize: '13px',
-    fontWeight: 500,
-    color: 'var(--color-text-secondary, #94a3b8)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.08em',
+  panelTitle: {
+    fontSize: '11px', fontWeight: 700, color: T.muted,
+    textTransform: 'uppercase', letterSpacing: '0.1em',
   },
-  controls: {
-    display: 'flex',
-    gap: '6px',
-  },
-  btn: {
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    width: '30px',
-    height: '28px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'opacity 0.15s',
-  },
-  btnPlay: {
-    background: '#22c55e22',
-    color: '#4ade80',
-  },
-  btnPause: {
-    background: '#f59e0b22',
-    color: '#fbbf24',
-  },
-  btnReset: {
-    background: '#6366f122',
-    color: '#818cf8',
+  headerBtns: { display: 'flex', gap: '6px' },
+  iconBtn: {
+    width: '28px', height: '26px', border: '1px solid',
+    borderRadius: '7px', cursor: 'pointer', fontSize: '13px',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
   },
   section: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    padding: '10px 0',
-    borderTop: '1px solid rgba(148,163,184,0.12)',
+    display: 'flex', flexDirection: 'column', gap: '11px',
+    padding: '11px 0', borderTop: `1px solid ${T.border}`,
   },
   sectionTitle: {
-    fontSize: '11px',
-    fontWeight: 500,
-    color: 'rgba(148,163,184,0.6)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.1em',
+    margin: 0, fontSize: '10px', fontWeight: 700, color: T.dim,
+    textTransform: 'uppercase', letterSpacing: '0.1em',
   },
-  sliderRow: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-  },
-  sliderHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-  },
-  sliderLabel: {
-    fontSize: '12px',
-    color: 'rgba(226,232,240,0.85)',
-  },
-  sliderValue: {
-    fontSize: '12px',
-    fontVariantNumeric: 'tabular-nums',
-    color: '#f97316',
-    fontWeight: 500,
-  },
-  unit: {
-    fontSize: '11px',
-    color: 'rgba(148,163,184,0.6)',
-  },
-  range: {
-    width: '100%',
-    accentColor: '#f97316',
-    cursor: 'pointer',
-  },
+  sliderWrap:   { display: 'flex', flexDirection: 'column', gap: '5px' },
+  sliderHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' },
+  paramLabel:   { fontSize: '12px', color: T.text },
+  paramSymbol:  { fontSize: '11px', color: T.dim, fontStyle: 'italic' },
+  paramValue:   { fontSize: '12px', fontWeight: 600, fontVariantNumeric: 'tabular-nums' },
+  paramUnit:    { fontSize: '10px', fontWeight: 400, color: T.dim },
+  range:        { width: '100%', cursor: 'pointer' },
   fluidGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '4px',
-    marginTop: '2px',
+    display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '5px',
   },
   fluidBtn: {
-    padding: '4px 2px',
-    fontSize: '11px',
-    borderRadius: '6px',
-    border: '1px solid rgba(148,163,184,0.15)',
-    background: 'rgba(30,41,59,0.6)',
-    color: 'rgba(148,163,184,0.8)',
-    cursor: 'pointer',
-    transition: 'all 0.15s',
-    textAlign: 'center' as const,
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
+    padding: '7px 4px', fontSize: '10px', fontWeight: 500, color: T.muted,
+    background: T.bg, border: `1px solid ${T.border}`, borderRadius: '7px',
+    cursor: 'pointer', lineHeight: 1.2,
   },
   fluidBtnActive: {
-    background: '#f9731622',
-    borderColor: '#f97316',
-    color: '#fb923c',
+    background: '#fff7ed', borderColor: '#fdba74', color: T.orange,
   },
-  gravBtns: {
-    display: 'flex',
-    gap: '4px',
-    flexWrap: 'wrap' as const,
+  fluidIcon: { fontSize: '14px', lineHeight: '1' },
+  presetGrid: {
+    display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px',
   },
-  gravBtn: {
-    padding: '3px 8px',
-    fontSize: '11px',
-    borderRadius: '6px',
-    border: '1px solid rgba(148,163,184,0.15)',
-    background: 'rgba(30,41,59,0.6)',
-    color: 'rgba(148,163,184,0.7)',
-    cursor: 'pointer',
+  presetBtn: {
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
+    padding: '6px 2px', background: T.bg, border: `1px solid ${T.border}`,
+    borderRadius: '7px', cursor: 'pointer',
   },
-  gravBtnActive: {
-    background: '#6366f122',
-    borderColor: '#818cf8',
-    color: '#a5b4fc',
+  presetBtnActive: {
+    background: '#f0fdf9', borderColor: '#5eead4',
   },
 }
