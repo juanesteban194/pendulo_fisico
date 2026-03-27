@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    // ── Target y módulos ────────────────────────────────────────────────────
+    // ES2020: transpila a JavaScript compatible con navegadores modernos.
+    // ESNext para módulos: usa import/export nativo del navegador.
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+
+    // ── Modo bundler ────────────────────────────────────────────────────────
+    // Vite actúa como bundler, así que TypeScript solo hace verificación
+    // de tipos (noEmit: true) sin generar archivos .js.
+    // Vite se encarga de la compilación real.
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "useDefineForClassFields": true,
+    "skipLibCheck": true,
+
+    // ── Modo estricto ───────────────────────────────────────────────────────
+    // strict: true activa un conjunto de reglas que previenen errores comunes:
+    //   • no usar variables sin inicializar
+    //   • no pasar null donde se espera un valor
+    //   • los parámetros de funciones deben tener tipos explícitos
+    //   • etc.
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simulador de Péndulo Físico — Física II UdeM</title>
+
+    <!--
+      Reset mínimo: elimina márgenes y paddings del navegador,
+      y fuerza que todos los elementos cuenten el borde dentro de su tamaño
+      (box-sizing: border-box es el comportamiento más predecible).
+    -->
+    <style>
+      *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;           /* sin scroll — la app ocupa exactamente 100vh */
+        background: #060b14;        /* color de fondo mientras carga React */
+        color: rgba(226, 232, 240, 0.9);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont,
+                     'Segoe UI', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* El div raíz donde React monta la aplicación */
+      #root {
+        width: 100%;
+        height: 100%;
+      }
+
+      /* Estilo global del scrollbar para los paneles laterales */
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.2);
+        border-radius: 2px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.35);
+      }
+
+      /* Estilo global para los inputs range (sliders) */
+      input[type='range'] {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 3px;
+        border-radius: 2px;
+        background: rgba(148, 163, 184, 0.15);
+        outline: none;
+      }
+      input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #fb923c;
+        cursor: pointer;
+        transition: transform 0.1s;
+      }
+      input[type='range']::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+      }
+      input[type='range']::-moz-range-thumb {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #fb923c;
+        cursor: pointer;
+        border: none;
+      }
+
+      /* Deshabilitar selección de texto en botones */
+      button {
+        user-select: none;
+        -webkit-user-select: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!--
+      React monta toda la aplicación dentro de este div.
+      El HTML de arriba es lo único que el navegador carga antes de React.
+    -->
+    <div id="root"></div>
+
+    <!--
+      Vite reemplaza esta línea por el bundle final en producción.
+      En desarrollo, sirve el módulo directamente sin compilar.
+    -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
