@@ -15,5 +15,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["Vite.config.ts"]
+  "include": ["vite.config.ts"]
 }
