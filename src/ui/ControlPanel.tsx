@@ -1,7 +1,7 @@
 // ─── PANEL DE CONTROL — TEMA CLARO ───────────────────────────────────────────
 
 import type { CSSProperties } from 'react'
-import { useSimulationStore, selectParams, selectRunning } from '../store/simulationStore'
+import { useSimulationStore, selectParams, selectRunning, selectShowAdvanced } from '../store/simulationStore'
 import { getAllFluids } from '../physics/fluids'
 import { LAB_PARAMS }  from '../physics/pendulum'
 import type { FluidId } from '../types/physics.types'
@@ -82,9 +82,10 @@ const FLUID_ICONS: Record<FluidId, string> = {
 }
 
 export function ControlPanel() {
-  const params  = useSimulationStore(selectParams)
-  const running = useSimulationStore(selectRunning)
-  const { setParams, setRunning, reset } = useSimulationStore.getState()
+  const params       = useSimulationStore(selectParams)
+  const running      = useSimulationStore(selectRunning)
+  const showAdvanced = useSimulationStore(selectShowAdvanced)
+  const { setParams, setRunning, reset, toggleAdvanced } = useSimulationStore.getState()
   const fluids = getAllFluids()
   const theta0Deg = params.theta0 * (180 / Math.PI)
 
@@ -118,6 +119,21 @@ export function ControlPanel() {
           >Lab</button>
         </div>
       </div>
+
+      {/* Toggle: muestra/oculta capas didácticas (vectores, fantasma, Leq, envelope) */}
+      <button
+        onClick={toggleAdvanced}
+        style={{
+          ...s.didacticToggle,
+          background:  showAdvanced ? '#dbeafe' : '#f8fafc',
+          borderColor: showAdvanced ? '#93c5fd' : T.border,
+          color:       showAdvanced ? '#1d4ed8' : T.muted,
+        }}
+        title="Muestra vectores de peso M·g, torque restaurador, esfera del equilibrio, péndulo simple equivalente Leq y envolvente exponencial del decaimiento"
+      >
+        <span style={s.didacticLabel}>📐 Modo didáctico</span>
+        <span style={s.didacticState}>{showAdvanced ? 'activo' : 'off'}</span>
+      </button>
 
       <Section title="Geometría del péndulo">
         <Slider label="Longitud"    symbol="L"  unit="m"
@@ -207,6 +223,17 @@ const s: Record<string, CSSProperties> = {
   labBtn: {
     width: 'auto', padding: '0 8px', fontSize: '10px', fontWeight: 700,
     background: '#f0fdf9', color: '#0d9488', borderColor: '#5eead4', letterSpacing: '0.03em',
+  },
+  didacticToggle: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '7px 11px', marginTop: '4px',
+    border: '1px solid', borderRadius: '7px', cursor: 'pointer',
+    transition: 'all 0.15s',
+  },
+  didacticLabel: { fontSize: '11px', fontWeight: 600 },
+  didacticState: {
+    fontSize: '9px', fontWeight: 700, letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
   },
   section: {
     display: 'flex', flexDirection: 'column', gap: '11px',

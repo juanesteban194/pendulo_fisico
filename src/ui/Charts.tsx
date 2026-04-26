@@ -3,23 +3,25 @@
 import { useMemo, type CSSProperties } from 'react'
 import {
   ResponsiveContainer, LineChart, Line, ScatterChart, Scatter,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine,
 } from 'recharts'
-import { useSimulationStore, selectHistory } from '../store/simulationStore'
+import { useSimulationStore, selectHistory, selectParams, selectShowAdvanced } from '../store/simulationStore'
+import { computeInertia } from '../physics/geometry'
+import { computeDamping, getFluidProperties } from '../physics/fluids'
 import type { SimulationFrame } from '../types/physics.types'
 
 const VIOLET = '#8b5cf6'
 const BLUE   = '#3b82f6'
 const ORANGE = '#f97316'
 const GREEN  = '#16a34a'
+const GRAY   = '#94a3b8'
 const MUTED  = 'rgba(71,85,105,0.5)'
 const GRID   = 'rgba(15,23,42,0.06)'
+const EQUI   = 'rgba(148,163,184,0.55)'
 
 const TICK   = { fontSize: 9, fill: 'rgba(71,85,105,0.6)' }
 const MARGIN = { top: 6, right: 6, bottom: 4, left: -18 }
 
-// Ventana deslizante para θ(t) y ω(t) — siempre muestra los últimos N segundos
-// para que las oscilaciones sean legibles sin compresión del eje X.
 const WINDOW_SECS = 10
 
 const TOOLTIP_STYLE: CSSProperties = {
@@ -32,6 +34,7 @@ const TOOLTIP_STYLE: CSSProperties = {
 interface DisplayFrame {
   time: number; theta: number; omega: number
   Ec: number; Ep: number; Etotal: number
+  envUpper?: number; envLower?: number
 }
 
 function toDisplay(frames: SimulationFrame[]): DisplayFrame[] {
@@ -58,9 +61,10 @@ function ChartCard({ title, subtitle, children }: {
 }
 
 export function Charts() {
-  const history = useSimulationStore(selectHistory)
+  const history      = useSimulationStore(selectHistory)
+  const params       = useSimulationStore(selectParams)
+  const showAdvanced = useSimulationStore(selectShowAdvanced)
 
-  // Todos los frames convertidos a unidades de display
   const frames = useMemo(() => toDisplay(history), [history])
 
   // Ventana deslizante: últimos WINDOW_SECS segundos de simulación
@@ -72,7 +76,31 @@ export function Charts() {
     return start <= 0 ? frames : frames.slice(start)
   }, [frames])
 
-  // Datos del diagrama de fase — usa todo el historial para ver la espiral completa
+  // ── Envelope exponencial: A₀·e^(−t/τ) sobreimpuesto a θ(t) ───────────────
+  //
+  // τ = 2·I / b — tiempo de decaimiento de la amplitud al 37%.
+  // Se usa b linealizado (ω pequeño) para una envolvente representativa.
+  // Físicamente correcto en régimen subamortiguado.
+  //
+  const thetaFrames = useMemo(() => {
+    if (!showAdvanced || windowedFrames.length === 0) return windowedFrames
+
+    const I_val   = computeInertia(params)
+    const fluid   = getFluidProperties(params.fluid, params.tempC)
+    // b a velocidad pequeña → coeficiente lineal estructural + viscoso
+    const b_lin   = computeDamping(0.1, params, fluid)
+    if (b_lin < 1e-12) return windowedFrames
+
+    const tau     = (2 * I_val) / b_lin
+    const A0      = (params.theta0 * 180) / Math.PI
+
+    return windowedFrames.map(f => ({
+      ...f,
+      envUpper:  A0 * Math.exp(-f.time / tau),
+      envLower: -A0 * Math.exp(-f.time / tau),
+    }))
+  }, [windowedFrames, showAdvanced, params])
+
   const phaseData = useMemo(
     () => frames.map(f => ({ theta: f.theta, omega: f.omega })),
     [frames]
@@ -89,25 +117,37 @@ export function Charts() {
   return (
     <div style={s.grid}>
 
-      {/* θ(t) — ventana deslizante de 10 s */}
+      {/* θ(t) con línea de equilibrio y envelope opcional */}
       <ChartCard title="θ(t) — posición angular" subtitle={`últimos ${WINDOW_SECS} s`}>
         <ResponsiveContainer width="100%" height={96}>
-          <LineChart data={windowedFrames} margin={MARGIN}>
+          <LineChart data={thetaFrames} margin={MARGIN}>
             <CartesianGrid strokeDasharray="2 3" stroke={GRID} />
             <XAxis dataKey="time" tick={TICK}
               label={{ value: 't (s)', position: 'insideBottomRight', offset: -2, style: TICK }} />
             <YAxis tick={TICK}
               label={{ value: '°', angle: -90, position: 'insideLeft', style: TICK }} />
+            <ReferenceLine y={0} stroke={EQUI} strokeDasharray="4 3" />
             <Tooltip contentStyle={TOOLTIP_STYLE}
-              formatter={(v: number) => [`${v.toFixed(3)}°`, 'θ']}
+              formatter={(v: number, name: string) => {
+                if (name === 'env+' || name === 'env−') return [`${v.toFixed(2)}°`, name]
+                return [`${v.toFixed(3)}°`, 'θ']
+              }}
               labelFormatter={(t: number) => `t = ${t} s`} />
+            {showAdvanced && (
+              <>
+                <Line type="monotone" dataKey="envUpper" name="env+" stroke={GRAY}
+                  strokeWidth={1} strokeDasharray="3 3" dot={false} isAnimationActive={false} />
+                <Line type="monotone" dataKey="envLower" name="env−" stroke={GRAY}
+                  strokeWidth={1} strokeDasharray="3 3" dot={false} isAnimationActive={false} />
+              </>
+            )}
             <Line type="monotone" dataKey="theta" stroke={VIOLET}
               strokeWidth={1.5} dot={false} isAnimationActive={false} />
           </LineChart>
         </ResponsiveContainer>
       </ChartCard>
 
-      {/* ω(t) — ventana deslizante de 10 s */}
+      {/* ω(t) con línea de equilibrio */}
       <ChartCard title="ω(t) — velocidad angular" subtitle={`últimos ${WINDOW_SECS} s`}>
         <ResponsiveContainer width="100%" height={96}>
           <LineChart data={windowedFrames} margin={MARGIN}>
@@ -115,6 +155,7 @@ export function Charts() {
             <XAxis dataKey="time" tick={TICK} />
             <YAxis tick={TICK}
               label={{ value: 'rad/s', angle: -90, position: 'insideLeft', style: { ...TICK, fontSize: 8 } }} />
+            <ReferenceLine y={0} stroke={EQUI} strokeDasharray="4 3" />
             <Tooltip contentStyle={TOOLTIP_STYLE}
               formatter={(v: number) => [`${v.toFixed(4)} rad/s`, 'ω']}
               labelFormatter={(t: number) => `t = ${t} s`} />
@@ -124,7 +165,7 @@ export function Charts() {
         </ResponsiveContainer>
       </ChartCard>
 
-      {/* Diagrama de fase θ vs ω — historial completo para ver la espiral */}
+      {/* Diagrama de fase con líneas de equilibrio (cruz central) */}
       <ChartCard title="Fase — θ vs ω">
         <ResponsiveContainer width="100%" height={96}>
           <ScatterChart margin={MARGIN}>
@@ -133,6 +174,8 @@ export function Charts() {
               label={{ value: 'θ (°)', position: 'insideBottomRight', offset: -2, style: TICK }} />
             <YAxis dataKey="omega" type="number" name="ω" tick={TICK}
               label={{ value: 'ω', angle: -90, position: 'insideLeft', style: TICK }} />
+            <ReferenceLine x={0} stroke={EQUI} strokeDasharray="4 3" />
+            <ReferenceLine y={0} stroke={EQUI} strokeDasharray="4 3" />
             <Tooltip contentStyle={TOOLTIP_STYLE}
               formatter={(v: number, name: string) =>
                 name === 'θ' ? [`${v.toFixed(2)}°`, 'θ'] : [`${v.toFixed(3)} rad/s`, 'ω']} />
@@ -145,7 +188,7 @@ export function Charts() {
         </ResponsiveContainer>
       </ChartCard>
 
-      {/* Energía mecánica — historial completo para ver el decaimiento */}
+      {/* Energía mecánica */}
       <ChartCard title="Energía mecánica">
         <ResponsiveContainer width="100%" height={96}>
           <LineChart data={frames} margin={MARGIN}>
@@ -177,20 +220,21 @@ const s: Record<string, CSSProperties> = {
     gap: '8px', padding: '8px', height: '100%', boxSizing: 'border-box', overflow: 'hidden',
   },
   card: {
-    display: 'flex', flexDirection: 'column', gap: '2px',
-    background: '#ffffff', borderRadius: '8px', padding: '6px 10px 4px',
+    display: 'flex', flexDirection: 'column',
+    background: '#ffffff', borderRadius: '8px', padding: '8px 10px 4px',
     border: '1px solid rgba(15,23,42,0.07)', overflow: 'hidden',
     boxShadow: '0 1px 3px rgba(15,23,42,0.05)',
   },
   cardHeader: {
-    display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: '2px',
   },
   cardTitle: {
-    margin: 0, fontSize: '10px', fontWeight: 700,
-    color: 'rgba(71,85,105,0.65)', textTransform: 'uppercase', letterSpacing: '0.08em',
+    margin: 0, fontSize: '11px', fontWeight: 700,
+    color: 'rgba(51,65,85,0.85)', letterSpacing: '0.01em',
   },
   cardSub: {
-    fontSize: '9px', color: 'rgba(71,85,105,0.40)', fontStyle: 'italic',
+    fontSize: '9px', color: 'rgba(71,85,105,0.45)', fontStyle: 'italic', flexShrink: 0,
   },
   empty: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' },
   emptyText: { fontSize: '12px', color: '#94a3b8' },

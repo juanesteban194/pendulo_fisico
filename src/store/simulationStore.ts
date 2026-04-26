@@ -41,6 +41,10 @@ export interface SimulationStore {
   /** true = simulación corriendo, false = pausada. */
   running: boolean
 
+  // ── Visualización ────────────────────────────────────────────────────────
+  /** true = mostrar capas didácticas (vectores, fantasma, péndulo equiv., envelope). */
+  showAdvanced: boolean
+
   // ── Historial para gráficas ───────────────────────────────────────────────
   /**
    * Buffer circular de frames capturados a ~30 Hz.
@@ -81,6 +85,9 @@ export interface SimulationStore {
    * Conserva los parámetros actuales. Limpia el historial.
    */
   reset: () => void
+
+  /** Alterna el modo didáctico avanzado (vectores físicos, comparaciones, envelope). */
+  toggleAdvanced: () => void
 }
 
 // ─── Implementación ───────────────────────────────────────────────────────────
@@ -89,10 +96,11 @@ export const useSimulationStore = create<SimulationStore>()(
   subscribeWithSelector((set, get) => ({
 
     // ── Estado inicial ───────────────────────────────────────────────────────
-    state:   createInitialState(LAB_PARAMS),
-    params:  LAB_PARAMS,
-    running: true,
-    history: [],
+    state:        createInitialState(LAB_PARAMS),
+    params:       LAB_PARAMS,
+    running:      true,
+    history:      [],
+    showAdvanced: false,
 
     // ── tick ─────────────────────────────────────────────────────────────────
     tick: (next) => set({ state: next }),
@@ -129,6 +137,9 @@ export const useSimulationStore = create<SimulationStore>()(
         running: true,
       })
     },
+
+    // ── toggleAdvanced ────────────────────────────────────────────────────────
+    toggleAdvanced: () => set(s => ({ showAdvanced: !s.showAdvanced })),
   }))
 )
 
@@ -142,10 +153,11 @@ export const useSimulationStore = create<SimulationStore>()(
 // Uso incorrecto:
 //   const { state } = useSimulationStore()          // re-renderiza en CADA tick
 
-export const selectState   = (s: SimulationStore) => s.state
-export const selectParams  = (s: SimulationStore) => s.params
-export const selectRunning = (s: SimulationStore) => s.running
-export const selectHistory = (s: SimulationStore) => s.history
-export const selectTheta   = (s: SimulationStore) => s.state.theta
-export const selectOmega   = (s: SimulationStore) => s.state.omega
-export const selectTime    = (s: SimulationStore) => s.state.time
+export const selectState        = (s: SimulationStore) => s.state
+export const selectParams       = (s: SimulationStore) => s.params
+export const selectRunning      = (s: SimulationStore) => s.running
+export const selectHistory      = (s: SimulationStore) => s.history
+export const selectTheta        = (s: SimulationStore) => s.state.theta
+export const selectOmega        = (s: SimulationStore) => s.state.omega
+export const selectTime         = (s: SimulationStore) => s.state.time
+export const selectShowAdvanced = (s: SimulationStore) => s.showAdvanced
