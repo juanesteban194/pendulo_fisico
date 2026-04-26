@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react'
 import { useSimulationStore, selectParams, selectRunning } from '../store/simulationStore'
 import { getAllFluids } from '../physics/fluids'
+import { LAB_PARAMS }  from '../physics/pendulum'
 import type { FluidId } from '../types/physics.types'
 
 // ─── Tokens de color (tema claro) ────────────────────────────────────────────
@@ -107,8 +108,14 @@ export function ControlPanel() {
           <button
             style={{ ...s.iconBtn, background: '#ede9fe', color: T.indigo, borderColor: '#c4b5fd' }}
             onClick={reset}
-            title="Reiniciar"
+            title="Reiniciar simulación"
           >↺</button>
+
+          <button
+            style={{ ...s.iconBtn, ...s.labBtn }}
+            onClick={() => setParams(LAB_PARAMS)}
+            title="Restaurar parámetros del laboratorio: L=0.25 m, m=0.020 kg, mr=0.075 kg, θ₀=5°, aire, Medellín"
+          >Lab</button>
         </div>
       </div>
 
@@ -196,6 +203,10 @@ const s: Record<string, CSSProperties> = {
     width: '28px', height: '26px', border: '1px solid',
     borderRadius: '7px', cursor: 'pointer', fontSize: '13px',
     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+  },
+  labBtn: {
+    width: 'auto', padding: '0 8px', fontSize: '10px', fontWeight: 700,
+    background: '#f0fdf9', color: '#0d9488', borderColor: '#5eead4', letterSpacing: '0.03em',
   },
   section: {
     display: 'flex', flexDirection: 'column', gap: '11px',

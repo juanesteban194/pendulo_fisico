@@ -1,85 +1,216 @@
 // ─── GEOMETRÍA VISUAL DEL PÉNDULO ────────────────────────────────────────────
 //
-// Construye las tres partes del péndulo en la escena Three.js:
-//   1. Soporte  — la estructura fija de donde cuelga el péndulo
-//   2. Barra    — el brazo que oscila (representa la tabla de MDF)
-//   3. Masa     — la esfera en el extremo (representa la masa de laboratorio)
+// Construye las partes del péndulo + mejoras visuales físicamente correctas:
 //
-// Estrategia de rotación:
-//   En vez de calcular la posición X,Y de cada pieza con sin(θ) y cos(θ),
-//   usamos un <group> cuyo punto de origen está en el pivote y lo rotamos
-//   con θ. Todo lo que esté dentro del grupo rota automáticamente.
-//   Esto es más limpio, más eficiente, y evita errores de trigonometría.
+//   1. Soporte   — estructura fija de donde cuelga el péndulo
+//   2. Barra     — brazo oscilante (MDF)
+//   3. Masa      — esfera en el extremo; brilla más con mayor Ec
 //
-// Escala visual:
-//   SCALE convierte metros reales a unidades Three.js.
-//   L_real = 0.25 m  →  L_visual = 0.25 × 2.5 = 0.625 unidades Three.js
-//   La física SIEMPRE usa metros reales. SCALE solo afecta lo que se dibuja.
+// Elementos añadidos:
+//   4. Línea de referencia vertical — muestra la posición de equilibrio (θ=0)
+//   5. Arco de ángulo θ            — representación estándar de manuales de física
+//   6. Flecha de velocidad v        — tangente al arco, |v| = |ω|·L, apunta en
+//                                     la dirección de movimiento instantáneo
+//
+// Estrategia de rotación: el <group> cuyo origen está en el pivote se rota con θ.
+// Escala visual: SCALE convierte metros reales → unidades Three.js (1 m = 2.5 u).
+// La física SIEMPRE usa metros reales; SCALE solo afecta el renderizado.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useRef }    from 'react'
-import { useFrame }  from '@react-three/fiber'
-import { useSimulationStore, selectTheta, selectParams } from '../store/simulationStore'
+import { useRef, useMemo }  from 'react'
+import { useFrame }         from '@react-three/fiber'
+import * as THREE           from 'three'
+import { useSimulationStore, selectParams } from '../store/simulationStore'
 import type { Mesh, Group } from 'three'
 
 // ─── Constantes visuales ─────────────────────────────────────────────────────
 
-/** 1 metro real = SCALE unidades Three.js. */
-const SCALE = 2.5
-
-/** Grosor visual de la barra (no tiene relación con la física). */
+const SCALE        = 2.5
 const BAR_WIDTH    = 0.028
 const BAR_DEPTH    = 0.018
-
-/** Radio del pivote (punto de giro). */
 const PIVOT_RADIUS = 0.038
+const ARC_SEGS     = 48   // segmentos máximos del arco de ángulo
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 
 export function PendulumMesh() {
-  // ── Refs a los objetos 3D ─────────────────────────────────────────────────
-  //
-  // useRef guarda una referencia directa al objeto Three.js en memoria.
-  // Esto nos permite modificarlo cada frame SIN pasar por React,
-  // lo que es mucho más eficiente que re-renderizar el componente 60 veces/s.
-  //
-  const groupRef = useRef<Group>(null)
-  const massRef  = useRef<Mesh>(null)
+  // ── Refs a objetos 3D ────────────────────────────────────────────────────
+  const groupRef   = useRef<Group>(null)
+  const massRef    = useRef<Mesh>(null)
+  const massMatRef = useRef<THREE.MeshStandardMaterial>(null)
 
-  // ── Leer parámetros del store ─────────────────────────────────────────────
-  //
-  // selectParams usa el selector del store: solo re-renderiza este componente
-  // cuando los parámetros cambian (no en cada tick de física).
-  //
-  const params = useSimulationStore(selectParams)
-  const L      = params.L * SCALE
-
-  // Radio visual de la masa: proporcional a mr, con límites razonables.
-  // Con mr=0.075 kg → radius ≈ 0.09 unidades → 16 px a zoom=180
+  // ── Parámetros reactivos (re-render solo cuando cambia el usuario) ────────
+  const params     = useSimulationStore(selectParams)
+  const L          = params.L * SCALE
   const massRadius = Math.max(0.06, Math.min(0.16, Math.sqrt(params.mr) * 0.34))
 
-  // ── Actualizar rotación cada frame ───────────────────────────────────────
+  // ── Línea de referencia vertical (posición de equilibrio) ────────────────
   //
-  // En lugar de leer theta con un selector reactivo (que causaría
-  // re-renders del componente a 60 Hz), lo leemos directamente del store
-  // con getState() y lo aplicamos al ref. Esto es el patrón correcto para
-  // animaciones de alta frecuencia en R3F.
+  // Usa LineDashedMaterial para visualizarse como línea punteada.
+  // El extremo inferior se actualiza cada frame en useFrame para seguir a L.
   //
+  const refLinePositions = useMemo(() => {
+    const arr = new Float32Array(6)
+    arr[2] = -0.025   // z del punto 0 (pivote)
+    arr[5] = -0.025   // z del punto 1 (extremo inferior)
+    return arr
+  }, [])
+
+  const refLine = useMemo(() => {
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(refLinePositions, 3))
+    const mat = new THREE.LineDashedMaterial({
+      color:       0x94a3b8,
+      dashSize:    0.035,
+      gapSize:     0.025,
+      opacity:     0.40,
+      transparent: true,
+    })
+    const line = new THREE.Line(geo, mat)
+    line.computeLineDistances()
+    return line
+  }, [refLinePositions])
+
+  // ── Arco de ángulo θ ──────────────────────────────────────────────────────
+  //
+  // Muestra el ángulo actual respecto a la vertical, como en los manuales.
+  // Buffer pre-asignado; se actualiza in-place cada frame para evitar GC.
+  //
+  const arcPositions = useMemo(() => new Float32Array((ARC_SEGS + 1) * 3), [])
+
+  const arcLine = useMemo(() => {
+    const geo = new THREE.BufferGeometry()
+    const mat = new THREE.LineBasicMaterial({
+      color:       0x8b5cf6,
+      opacity:     0.65,
+      transparent: true,
+    })
+    const line = new THREE.Line(geo, mat)
+    line.visible = false
+    return line
+  }, [])
+
+  // ── Flecha de velocidad tangencial ────────────────────────────────────────
+  //
+  // v = ω × L, perpendicular al brazo, apunta en la dirección de movimiento.
+  // Dirección: sign(ω) × (cos θ, sin θ) — derivada del vector de posición.
+  //
+  const arrowDir = useMemo(() => new THREE.Vector3(1, 0, 0), [])
+
+  const arrow = useMemo(() => {
+    const a = new THREE.ArrowHelper(
+      new THREE.Vector3(1, 0, 0),   // dirección inicial
+      new THREE.Vector3(0, 0, 0),   // origen inicial
+      0.1,                           // longitud inicial
+      0x22d3ee,                      // color teal (indica velocidad)
+      0.07,                          // longitud de la cabeza
+      0.045,                         // ancho de la cabeza
+    )
+    a.visible = false
+    return a
+  }, [])
+
+  // ── useFrame: actualizar todos los elementos dinámicos ────────────────────
   useFrame(() => {
-    if (!groupRef.current) return
-    const theta = selectTheta(useSimulationStore.getState())
-    // rotation.z = θ rota el grupo alrededor del eje Z (perpendicular a la pantalla)
-    // En Three.js el eje Y apunta hacia arriba, por eso la barra cuelga hacia -Y
-    groupRef.current.rotation.z = theta
+    const store    = useSimulationStore.getState()
+    const theta    = store.state.theta
+    const omega    = store.state.omega
+    const L_vis    = store.params.L * SCALE
+    const p        = store.params
+    const absOmega = Math.abs(omega)
+
+    // Rotación del grupo (péndulo completo)
+    if (groupRef.current) groupRef.current.rotation.z = theta
+
+    // ── Línea de referencia: actualizar extremo inferior ──────────────────
+    refLinePositions[4] = -L_vis
+    ;(refLine.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true
+    refLine.computeLineDistances()
+
+    // ── Arco de ángulo θ ──────────────────────────────────────────────────
+    //
+    // El arco va de -π/2 (vertical abajo) a -π/2 + θ (posición actual).
+    // arcRadius crece con L para mantener proporción, con límites visuales.
+    //
+    const absTheta = Math.abs(theta)
+    if (absTheta > 0.02) {
+      const arcRadius = Math.max(0.08, Math.min(0.30, L_vis * 0.27))
+      const steps     = Math.min(ARC_SEGS, Math.max(4, Math.round(absTheta * ARC_SEGS / (Math.PI / 2))))
+      const startA    = -Math.PI / 2
+      const endA      = startA + theta
+      const minA      = Math.min(startA, endA)
+      const maxA      = Math.max(startA, endA)
+
+      for (let i = 0; i <= steps; i++) {
+        const a                 = minA + (i / steps) * (maxA - minA)
+        arcPositions[i * 3]     = Math.cos(a) * arcRadius
+        arcPositions[i * 3 + 1] = Math.sin(a) * arcRadius
+        arcPositions[i * 3 + 2] = 0.005
+      }
+
+      if (!arcLine.geometry.attributes.position) {
+        arcLine.geometry.setAttribute('position', new THREE.BufferAttribute(arcPositions, 3))
+      } else {
+        ;(arcLine.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true
+      }
+      arcLine.geometry.setDrawRange(0, steps + 1)
+      arcLine.visible = true
+    } else {
+      arcLine.visible = false
+    }
+
+    // ── Flecha de velocidad tangencial ────────────────────────────────────
+    //
+    // La velocidad del extremo es v = ω × L (tangencial al círculo).
+    // Dirección: rotar el vector del brazo 90° en la dirección de ω.
+    //   brazo = (sin θ, −cos θ)
+    //   tangente CCW = (cos θ, sin θ)  [rotar 90° CCW]
+    //
+    if (absOmega > 0.04) {
+      const sign     = Math.sign(omega)
+      const arrowLen = Math.min(0.45, absOmega * L_vis * 0.30)
+      const headLen  = Math.min(0.08, arrowLen * 0.35)
+      const headWid  = headLen * 0.65
+
+      arrowDir.set(sign * Math.cos(theta), sign * Math.sin(theta), 0)
+      arrow.position.set(Math.sin(theta) * L_vis, -Math.cos(theta) * L_vis, 0.025)
+      arrow.setDirection(arrowDir)
+      arrow.setLength(Math.max(0.06, arrowLen), headLen, headWid)
+      arrow.visible = true
+    } else {
+      arrow.visible = false
+    }
+
+    // ── Intensidad de emisión de la masa ∝ Ec / E_inicial ─────────────────
+    //
+    // La masa brilla más cuando pasa por el punto más bajo (máx. Ec).
+    // Se normaliza con ω_max teórico calculado desde la energía inicial.
+    //
+    if (massMatRef.current) {
+      const I_val    = (1 / 3) * p.m * p.L * p.L + p.mr * p.L * p.L
+      const d_cm     = (p.m * p.L / 2 + p.mr * p.L) / (p.m + p.mr)
+      const M        = p.m + p.mr
+      const omegaMax = Math.sqrt(
+        2 * M * p.g * d_cm * (1 - Math.cos(p.theta0)) / Math.max(I_val, 1e-10)
+      )
+      const t = omegaMax > 0.001 ? Math.min(1, absOmega / omegaMax) : 0
+      massMatRef.current.emissiveIntensity = 0.05 + t * 0.42
+    }
   })
 
   return (
     <group>
-      {/* ── Soporte horizontal (fijo, no rota) ──────────────────────────────
-       *
-       * Simula la estructura de la que cuelga el péndulo en el laboratorio.
-       * Está fuera del grupo rotante para que permanezca estático.
-       */}
+
+      {/* ── Línea de referencia vertical (equilibrio, fija) ──────────────── */}
+      <primitive object={refLine} />
+
+      {/* ── Arco de ángulo θ (fijo, actualizado en useFrame) ─────────────── */}
+      <primitive object={arcLine} />
+
+      {/* ── Flecha de velocidad tangencial ───────────────────────────────── */}
+      <primitive object={arrow} />
+
+      {/* ── Soporte horizontal (fijo, no rota) ───────────────────────────── */}
       <mesh position={[0, 0.01, 0]}>
         <boxGeometry args={[0.55, 0.022, 0.022]} />
         <meshStandardMaterial color="#334155" roughness={0.7} metalness={0.3} />
@@ -91,47 +222,20 @@ export function PendulumMesh() {
         <meshStandardMaterial color="#475569" roughness={0.3} metalness={0.8} />
       </mesh>
 
-      {/* ── Grupo rotante — todo lo que oscila ──────────────────────────────
-       *
-       * El punto de origen de este grupo está en [0,0,0] (el pivote).
-       * Al cambiar rotation.z en useFrame, todo el contenido rota
-       * alrededor del pivote exactamente como un péndulo real.
-       */}
+      {/* ── Grupo rotante — todo lo que oscila ───────────────────────────── */}
       <group ref={groupRef}>
 
-        {/* Barra del péndulo
-         *
-         * BoxGeometry args: [ancho, alto, profundidad]
-         * La barra tiene alto = L (la longitud del péndulo en unidades visuales).
-         * La geometría se crea centrada en el origen de Three.js, así que
-         * su centro queda en Y=0 (el pivote). Para que cuelgue hacia abajo
-         * desplazamos su posición a Y = -L/2.
-         *
-         *   pivote (Y=0)
-         *      │  ← extremo superior de la barra
-         *      │
-         *      │  ← centro de la barra en Y = -L/2
-         *      │
-         *      ●  ← extremo inferior (masa) en Y = -L
-         */}
+        {/* Barra del péndulo */}
         <mesh position={[0, -L / 2, 0]}>
           <boxGeometry args={[BAR_WIDTH, L, BAR_DEPTH]} />
-          <meshStandardMaterial
-            color="#94a3b8"
-            roughness={0.55}
-            metalness={0.15}
-          />
+          <meshStandardMaterial color="#94a3b8" roughness={0.55} metalness={0.15} />
         </mesh>
 
-        {/* Masa en el extremo
-         *
-         * Se posiciona en Y = -L (el extremo de la barra).
-         * Su radio varía con la masa real mr para dar feedback visual
-         * inmediato cuando el usuario cambia el parámetro.
-         */}
+        {/* Masa en el extremo — emissiveIntensity actualizado en useFrame */}
         <mesh ref={massRef} position={[0, -L, 0]}>
           <sphereGeometry args={[massRadius, 36, 36]} />
           <meshStandardMaterial
+            ref={massMatRef}
             color="#f97316"
             roughness={0.25}
             metalness={0.45}
@@ -140,7 +244,7 @@ export function PendulumMesh() {
           />
         </mesh>
 
-        {/* Conector barra→masa: pequeño cilindro que une visualmente */}
+        {/* Conector barra → masa */}
         <mesh position={[0, -L + massRadius * 0.5, 0]}>
           <cylinderGeometry args={[BAR_WIDTH * 0.4, BAR_WIDTH * 0.4, massRadius, 12]} />
           <meshStandardMaterial color="#64748b" roughness={0.6} metalness={0.2} />
@@ -148,19 +252,12 @@ export function PendulumMesh() {
 
       </group>
 
-      {/* ── Pivote (fijo, encima del grupo rotante) ──────────────────────────
-       *
-       * Se dibuja último para quedar visualmente encima de la barra.
-       * Su posición es fija en el origen — es el punto de giro.
-       */}
+      {/* ── Pivote (fijo, encima del grupo rotante) ───────────────────────── */}
       <mesh position={[0, 0, 0.015]}>
         <sphereGeometry args={[PIVOT_RADIUS, 24, 24]} />
-        <meshStandardMaterial
-          color="#cbd5e1"
-          roughness={0.2}
-          metalness={0.75}
-        />
+        <meshStandardMaterial color="#cbd5e1" roughness={0.2} metalness={0.75} />
       </mesh>
+
     </group>
   )
 }

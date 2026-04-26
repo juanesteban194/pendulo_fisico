@@ -23,8 +23,8 @@ import { LAB_PARAMS, createInitialState } from '../physics/pendulum'
 
 // ─── Configuración del historial ─────────────────────────────────────────────
 
-/** Máximo de frames almacenados para las gráficas (~10 s a 30 Hz). */
-const MAX_HISTORY = 300
+/** Máximo de frames almacenados para las gráficas (~30 s a 30 Hz). */
+const MAX_HISTORY = 900
 
 // ─── Tipos del store ──────────────────────────────────────────────────────────
 
