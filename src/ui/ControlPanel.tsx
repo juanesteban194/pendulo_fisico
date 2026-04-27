@@ -140,12 +140,19 @@ export function ControlPanel() {
           value={params.L}  min={0.05} max={3.0}  step={0.01} digits={2}
           onChange={v => setParams({ L: v })} />
         <Slider label="Masa extremo" symbol="mᵣ" unit="kg"
-          value={params.mr} min={0.01} max={0.5}  step={0.005} digits={3}
+          value={params.mr} min={0.01} max={10.0} step={0.05} digits={2}
           onChange={v => setParams({ mr: v })} />
         <Slider label="Masa barra"  symbol="m"  unit="kg"
-          value={params.m}  min={0.001} max={0.2} step={0.001} digits={3}
+          value={params.m}  min={0.001} max={5.0} step={0.025} digits={3}
           color={T.blue}
           onChange={v => setParams({ m: v })} />
+        {/* Posición del pivote desde el extremo superior. Cuando supera la
+            posición del CM (≈0.224 m para lab), el sistema se vuelve inestable
+            (péndulo invertido). */}
+        <Slider label="Pos. pivote"  symbol="a"  unit="m"
+          value={params.pivotOffset} min={0} max={params.L} step={0.005} digits={3}
+          color={T.amber}
+          onChange={v => setParams({ pivotOffset: v })} />
       </Section>
 
       <Section title="Condición inicial">

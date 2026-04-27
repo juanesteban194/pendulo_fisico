@@ -117,6 +117,10 @@ export const useSimulationStore = create<SimulationStore>()(
     // ── setParams ─────────────────────────────────────────────────────────────
     setParams: (partial) => {
       const params = { ...get().params, ...partial }
+      // Asegurar que pivotOffset esté siempre dentro de [0, L].
+      // Necesario cuando el usuario reduce L y el pivote queda fuera de la barra.
+      if (params.pivotOffset < 0) params.pivotOffset = 0
+      if (params.pivotOffset > params.L) params.pivotOffset = params.L
       set({
         params,
         state:   createInitialState(params),

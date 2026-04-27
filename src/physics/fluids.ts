@@ -59,7 +59,7 @@ export function getFluidProperties(id: FluidId, tempC: number): FluidProperties 
 
 /**
  * Número de Reynolds: Re = ρ · v · (2r) / η
- * v = |ω| · L (velocidad lineal del extremo)
+ * v = |ω| · (L − a) — velocidad lineal del extremo donde está la masa.
  */
 export function computeReynolds(
   omega: number,
@@ -67,7 +67,8 @@ export function computeReynolds(
   fluid: FluidProperties
 ): number {
   if (fluid.id === 'vacuum' || fluid.eta === 0 || fluid.rho === 0) return 0
-  const v = Math.abs(omega) * params.L
+  const massDist = params.L - params.pivotOffset
+  const v = Math.abs(omega) * massDist
   const r = computeMassRadius(params)
   return (fluid.rho * v * 2 * r) / fluid.eta
 }
@@ -93,13 +94,17 @@ export function computeDamping(
   const absOmega = Math.abs(omega)
   if (absOmega < 1e-12) return 0
 
-  const { L } = params
+  const { L, pivotOffset: a } = params
+  const massDist = L - a
   const r = computeMassRadius(params)
   const A = computeFrontalArea(params)
 
   // ── 1. Arrastre de la masa esférica ───────────────────────────────────────
-  const b_stokes = 6 * Math.PI * fluid.eta * r * L * L
-  const b_turb   = 0.5 * fluid.rho * fluid.Cd * A * L * L * absOmega
+  // Distancia masa→pivote = (L − a). El brazo de palanca para el torque
+  // y la velocidad lineal v = ω·(L − a).
+  const armSq    = massDist * massDist
+  const b_stokes = 6 * Math.PI * fluid.eta * r * armSq
+  const b_turb   = 0.5 * fluid.rho * fluid.Cd * A * armSq * absOmega
 
   const Re = computeReynolds(omega, params, fluid)
   let b_esfera: number
@@ -109,16 +114,21 @@ export function computeDamping(
 
   // ── 2. Arrastre de la barra giratoria ────────────────────────────────────
   //
-  // Modelo: placa plana de ancho BAR_WIDTH giratoria alrededor de un extremo.
-  // Cada elemento dr a distancia r del pivote tiene velocidad v = ω·r.
+  // La barra rota alrededor del pivote ubicado a distancia `a` del extremo
+  // superior. Esto genera dos secciones que aportan torque de arrastre:
+  //   • Sección por encima del pivote: longitud `a`,    integral r³dr de 0 a a
+  //   • Sección por debajo del pivote: longitud `L−a`,  integral r³dr de 0 a (L−a)
   //
-  // Torque elemental:  dτ = r · ½·ρ·Cd_bar·BAR_WIDTH·(ω·r)²·dr
-  // Torque total:      τ = ½·ρ·Cd_bar·BAR_WIDTH·ω²·∫₀ᴸ r³ dr
-  //                      = ½·ρ·Cd_bar·BAR_WIDTH·ω²·L⁴/4
+  // Torque total:  τ = ½·ρ·Cd·w·ω²·[a⁴/4 + (L−a)⁴/4]
+  // Coeficiente:   b_barra = τ/|ω| = ½·ρ·Cd·w·|ω|·[a⁴ + (L−a)⁴]/4
   //
-  // Coeficiente:       b_barra = τ/|ω| = ½·ρ·Cd_bar·BAR_WIDTH·|ω|·L⁴/4
+  // Para a = 0 → coef = L⁴/4 (caso clásico, pivote en el extremo).
+  // Para a = L/2 → coef = 2·(L/2)⁴/4 = L⁴/32 (16× menor: barra centrada).
   //
-  const b_barra = 0.5 * fluid.rho * CD_BAR * BAR_WIDTH * absOmega * Math.pow(L, 4) / 4
+  const aboveLen = a
+  const belowLen = massDist
+  const barCoef  = (Math.pow(aboveLen, 4) + Math.pow(belowLen, 4)) / 4
+  const b_barra  = 0.5 * fluid.rho * CD_BAR * BAR_WIDTH * absOmega * barCoef
 
   // ── 3. Amortiguamiento estructural ────────────────────────────────────────
   // Independiente del fluido (excepto vacío, ya manejado arriba).

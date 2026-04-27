@@ -88,10 +88,12 @@ export function TrajectoryLine() {
 
     const store            = useSimulationStore.getState()
     const { theta, omega } = store.state
-    const L                = store.params.L * SCALE
+    // El extremo de la masa traza un círculo de radio (L − pivotOffset)
+    // alrededor del pivote — NO L, porque el pivote puede no estar en el extremo.
+    const radius = (store.params.L - store.params.pivotOffset) * SCALE
 
-    const x =  Math.sin(theta) * L
-    const y = -Math.cos(theta) * L
+    const x =  Math.sin(theta) * radius
+    const y = -Math.cos(theta) * radius
 
     // Actualizar ω máximo con decaimiento suave
     const absOmega = Math.abs(omega)

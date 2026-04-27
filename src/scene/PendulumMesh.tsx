@@ -28,7 +28,7 @@ import type { Mesh, Group }          from 'three'
 // ─── Constantes visuales ─────────────────────────────────────────────────────
 
 const SCALE        = 2.5
-const BAR_WIDTH    = 0.028
+const BAR_WIDTH    = 0.028   // ancho mínimo de la barra (visual)
 const BAR_DEPTH    = 0.018
 const PIVOT_RADIUS = 0.038
 const ARC_SEGS     = 48
@@ -45,15 +45,39 @@ export function PendulumMesh() {
   const params       = useSimulationStore(selectParams)
   const showAdvanced = useSimulationStore(selectShowAdvanced)
   const L            = params.L * SCALE
-  const massRadius   = Math.max(0.06, Math.min(0.16, Math.sqrt(params.mr) * 0.34))
+  const a_vis        = params.pivotOffset * SCALE       // distancia visual del pivote al extremo superior
+  const massDist     = params.L - params.pivotOffset    // distancia real pivote→masa (m)
+  const r_mass       = massDist * SCALE                  // distancia visual pivote→masa
+  const barCenterY   = a_vis - L / 2                     // y del centro de la barra (puede ser positivo)
 
-  // Cantidades derivadas (recomputadas solo cuando cambian params)
-  const I_val   = (1 / 3) * params.m * params.L * params.L + params.mr * params.L * params.L
-  const d_cm    = (params.m * params.L / 2 + params.mr * params.L) / (params.m + params.mr)
+  // Radio visual de la masa: crece con sqrt(mr) — feedback visual claro al
+  // cambiar el slider, con cap superior para que no domine la escena cuando
+  // la masa es muy grande (hasta 10 kg).
+  //   mr=0.075 (lab) → 0.094   |   mr=1 → 0.22 (cap)   |   mr=10 → 0.22 (cap)
+  const massRadius   = Math.max(0.06, Math.min(0.22, Math.sqrt(params.mr) * 0.34))
+
+  // Ancho visual de la barra: crece con sqrt(m) cuando es masiva.
+  // No afecta a la física (eso usa BAR_WIDTH físico en fluids.ts).
+  //   m=0.020 (lab) → 0.028 (mínimo)   |   m=1 → 0.06 (cap)
+  const barWidth = Math.max(BAR_WIDTH, Math.min(0.060, Math.sqrt(params.m) * 0.085))
+  const barDepth = Math.max(BAR_DEPTH, Math.min(0.040, Math.sqrt(params.m) * 0.055))
+
+  // Cantidades derivadas con pivote desplazado (teorema de ejes paralelos).
+  // d_cm con SIGNO: positivo = CM debajo del pivote (estable);
+  //                 negativo = CM arriba del pivote (inestable).
+  const a       = params.pivotOffset
+  const I_val   = (1 / 12) * params.m * params.L * params.L
+                + params.m * (params.L / 2 - a) * (params.L / 2 - a)
+                + params.mr * (params.L - a) * (params.L - a)
   const M_total = params.m + params.mr
-  const Leq     = M_total > 0 && d_cm > 0 ? I_val / (M_total * d_cm) : params.L
+  const d_cm    = M_total > 0
+    ? (params.m * (params.L / 2 - a) + params.mr * (params.L - a)) / M_total
+    : 0
+  const Leq     = M_total > 0 && Math.abs(d_cm) > 1e-9
+    ? I_val / (M_total * Math.abs(d_cm))
+    : Infinity
   const d_vis   = d_cm * SCALE
-  const Leq_vis = Leq * SCALE
+  const Leq_vis = isFinite(Leq) ? Leq * SCALE : 0
 
   // ── Línea de referencia vertical ──────────────────────────────────────────
   const refLinePositions = useMemo(() => {
@@ -121,23 +145,25 @@ export function PendulumMesh() {
     const store    = useSimulationStore.getState()
     const theta    = store.state.theta
     const omega    = store.state.omega
-    const L_vis    = store.params.L * SCALE
     const p        = store.params
+    const aDyn     = p.pivotOffset
+    const massDistDyn = p.L - aDyn
+    const r_mass_dyn  = massDistDyn * SCALE
     const advanced = store.showAdvanced
     const absOmega = Math.abs(omega)
 
     // Rotación del grupo del péndulo
     if (groupRef.current) groupRef.current.rotation.z = theta
 
-    // ── Línea de referencia ───────────────────────────────────────────────
-    refLinePositions[4] = -L_vis
+    // ── Línea de referencia: extiende del pivote hasta el extremo de la masa ─
+    refLinePositions[4] = -r_mass_dyn
     ;(refLine.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true
     refLine.computeLineDistances()
 
     // ── Arco de ángulo θ + etiqueta ───────────────────────────────────────
     const absTheta = Math.abs(theta)
     if (absTheta > 0.02) {
-      const arcRadius = Math.max(0.08, Math.min(0.30, L_vis * 0.27))
+      const arcRadius = Math.max(0.08, Math.min(0.30, r_mass_dyn * 0.27))
       const steps     = Math.min(ARC_SEGS, Math.max(4, Math.round(absTheta * ARC_SEGS / (Math.PI / 2))))
       const startA    = -Math.PI / 2
       const endA      = startA + theta
@@ -178,13 +204,13 @@ export function PendulumMesh() {
     }
 
     // ── Flecha de velocidad tangencial ────────────────────────────────────
-    if (absOmega > 0.04) {
+    if (absOmega > 0.04 && r_mass_dyn > 0.01) {
       const sign     = Math.sign(omega)
-      const arrowLen = Math.min(0.45, absOmega * L_vis * 0.30)
+      const arrowLen = Math.min(0.45, absOmega * r_mass_dyn * 0.30)
       const headLen  = Math.min(0.08, arrowLen * 0.35)
       const headWid  = headLen * 0.65
       velArrowDir.set(sign * Math.cos(theta), sign * Math.sin(theta), 0)
-      velArrow.position.set(Math.sin(theta) * L_vis, -Math.cos(theta) * L_vis, 0.025)
+      velArrow.position.set(Math.sin(theta) * r_mass_dyn, -Math.cos(theta) * r_mass_dyn, 0.025)
       velArrow.setDirection(velArrowDir)
       velArrow.setLength(Math.max(0.06, arrowLen), headLen, headWid)
       velArrow.visible = true
@@ -194,15 +220,21 @@ export function PendulumMesh() {
 
     // ── Capa avanzada: vector de peso M·g desde el CM ────────────────────
     //
-    // Posición del CM en mundo (rotado): (sin θ · d, −cos θ · d)
+    // Posición del CM rotado:
+    //   x = sin(θ) · d_signed   (signed distance: + abajo, − arriba)
+    //   y = −cos(θ) · d_signed
     // Dirección: siempre vertical hacia abajo (eje −Y) en mundo.
     // Longitud: proporcional a M·g (con escala visual capada).
     //
     if (advanced) {
-      const cmX = Math.sin(theta) * d_vis
-      const cmY = -Math.cos(theta) * d_vis
-      const M_local = p.m + p.mr
-      const weightMag = M_local * p.g
+      // d_cm_dyn con SIGNO según la posición actual del pivote
+      const dDyn = M_total > 0
+        ? (p.m * (p.L / 2 - aDyn) + p.mr * (p.L - aDyn)) / M_total
+        : 0
+      const dvDyn = dDyn * SCALE
+      const cmX   = Math.sin(theta) * dvDyn
+      const cmY   = -Math.cos(theta) * dvDyn
+      const weightMag = M_total * p.g
       const weightLen = Math.max(0.10, Math.min(0.45, weightMag * 0.45))
       weightArrow.position.set(cmX, cmY, 0.020)
       weightArrow.setDirection(new THREE.Vector3(0, -1, 0))
@@ -214,17 +246,24 @@ export function PendulumMesh() {
 
     // ── Capa avanzada: vector de torque restaurador ──────────────────────
     //
-    // τ = −Mgd·sin(θ), tangencial al arco en el extremo de la masa,
-    // siempre apuntando hacia el equilibrio (signo opuesto a θ).
+    // τ_grav = −M·g·d·sin(θ).
+    // Si d > 0: la flecha apunta hacia el equilibrio (sistema estable).
+    // Si d < 0: la flecha apunta ALEJÁNDOSE del equilibrio (sistema inestable
+    //           — péndulo invertido). Esto es físicamente correcto.
     //
-    if (advanced && absTheta > 0.03) {
-      const tipX = Math.sin(theta) * L_vis
-      const tipY = -Math.cos(theta) * L_vis
-      // Dirección tangencial hacia el equilibrio: -sign(θ) · (cos θ, sin θ)
-      const torqueSign = -Math.sign(theta)
+    if (advanced && absTheta > 0.03 && r_mass_dyn > 0.01) {
+      const tipX = Math.sin(theta) * r_mass_dyn
+      const tipY = -Math.cos(theta) * r_mass_dyn
+      // d_cm dinámico (con signo)
+      const dDyn = M_total > 0
+        ? (p.m * (p.L / 2 - aDyn) + p.mr * (p.L - aDyn)) / M_total
+        : 0
+      // Dirección tangencial: -sign(d·sin θ) · (cos θ, sin θ)
+      // Si d > 0 y θ > 0 → signo negativo (hacia equilibrio).
+      // Si d < 0 y θ > 0 → signo positivo (alejándose del equilibrio).
+      const torqueSign = -Math.sign(dDyn * Math.sin(theta))
       torqueArrowDir.set(torqueSign * Math.cos(theta), torqueSign * Math.sin(theta), 0)
-      // Magnitud del torque: |τ| = M·g·d·|sin θ|, escalada a unidades visuales
-      const torqueMag = M_total * p.g * d_cm * Math.abs(Math.sin(theta))
+      const torqueMag = M_total * p.g * Math.abs(dDyn) * Math.abs(Math.sin(theta))
       const torqueLen = Math.max(0.08, Math.min(0.35, torqueMag * 1.5))
       torqueArrow.position.set(tipX, tipY, 0.022)
       torqueArrow.setDirection(torqueArrowDir)
@@ -235,12 +274,32 @@ export function PendulumMesh() {
     }
 
     // ── Intensidad de emisión de la masa ∝ Ec/E_inicial ───────────────────
+    //
+    // Fórmulas con pivote desplazado:
+    //   I = (1/12)·m·L² + m·(L/2 − a)² + mr·(L − a)²
+    //   d = [m·(L/2 − a) + mr·(L − a)] / (m + mr)
+    //
+    // Si d ≤ 0 (sistema crítico/inestable) la masa siempre brilla al máximo,
+    // porque cualquier movimiento es ganancia de Ec.
+    //
     if (massMatRef.current) {
-      const I_l    = (1 / 3) * p.m * p.L * p.L + p.mr * p.L * p.L
-      const d_l    = (p.m * p.L / 2 + p.mr * p.L) / (p.m + p.mr)
-      const M_l    = p.m + p.mr
-      const omegaMax = Math.sqrt(2 * M_l * p.g * d_l * (1 - Math.cos(p.theta0)) / Math.max(I_l, 1e-10))
-      const t = omegaMax > 0.001 ? Math.min(1, absOmega / omegaMax) : 0
+      const I_l = (1 / 12) * p.m * p.L * p.L
+                + p.m * (p.L / 2 - aDyn) * (p.L / 2 - aDyn)
+                + p.mr * (p.L - aDyn) * (p.L - aDyn)
+      const M_l = p.m + p.mr
+      const d_l = M_l > 0
+        ? (p.m * (p.L / 2 - aDyn) + p.mr * (p.L - aDyn)) / M_l
+        : 0
+      let t: number
+      if (d_l > 1e-6) {
+        const omegaMax = Math.sqrt(
+          2 * M_l * p.g * d_l * (1 - Math.cos(p.theta0)) / Math.max(I_l, 1e-10)
+        )
+        t = omegaMax > 0.001 ? Math.min(1, absOmega / omegaMax) : 0
+      } else {
+        // Sistema crítico/inestable — escala con velocidad típica
+        t = Math.min(1, absOmega / 5)
+      }
       massMatRef.current.emissiveIntensity = 0.05 + t * 0.42
     }
   })
@@ -285,14 +344,14 @@ export function PendulumMesh() {
       {/* Vector de torque restaurador */}
       <primitive object={torqueArrow} />
 
-      {/* Esfera fantasma del equilibrio */}
+      {/* Esfera fantasma del equilibrio (refleja la geometría actual del péndulo) */}
       {showAdvanced && (
         <group>
-          <mesh position={[0, -L / 2, -0.015]}>
+          <mesh position={[0, barCenterY, -0.015]}>
             <boxGeometry args={[BAR_WIDTH * 0.6, L, BAR_DEPTH * 0.4]} />
             <meshBasicMaterial color="#94a3b8" transparent opacity={0.18} />
           </mesh>
-          <mesh position={[0, -L, -0.015]}>
+          <mesh position={[0, -r_mass, -0.015]}>
             <sphereGeometry args={[massRadius * 0.95, 24, 24]} />
             <meshBasicMaterial color="#cbd5e1" transparent opacity={0.30} />
           </mesh>
@@ -332,11 +391,12 @@ export function PendulumMesh() {
       {/* ─── Grupo rotante — todo lo que oscila ─────────────────────────── */}
       <group ref={groupRef}>
 
-        {/* Capa avanzada: péndulo simple equivalente (longitud Leq) */}
-        {showAdvanced && Leq_vis < L && (
+        {/* Capa avanzada: péndulo simple equivalente (longitud Leq) — solo si
+            el sistema es estable (Leq finita y < distancia visual razonable) */}
+        {showAdvanced && isFinite(Leq) && Leq_vis > 0 && Leq_vis < L * 1.5 && d_cm > 0 && (
           <group>
             <mesh position={[0, -Leq_vis / 2, 0.012]}>
-              <boxGeometry args={[BAR_WIDTH * 0.4, Leq_vis, BAR_DEPTH * 0.3]} />
+              <boxGeometry args={[barWidth * 0.4, Leq_vis, barDepth * 0.3]} />
               <meshBasicMaterial color="#3b82f6" transparent opacity={0.50} />
             </mesh>
             <mesh position={[0, -Leq_vis, 0.012]}>
@@ -346,13 +406,15 @@ export function PendulumMesh() {
           </group>
         )}
 
-        {/* Barra del péndulo */}
-        <mesh position={[0, -L / 2, 0]}>
-          <boxGeometry args={[BAR_WIDTH, L, BAR_DEPTH]} />
+        {/* Barra del péndulo — extiende de +a_vis (arriba del pivote) a
+            −r_mass (abajo del pivote). Su centro queda en barCenterY. */}
+        <mesh position={[0, barCenterY, 0]}>
+          <boxGeometry args={[barWidth, L, barDepth]} />
           <meshStandardMaterial color="#94a3b8" roughness={0.55} metalness={0.15} />
         </mesh>
 
-        {/* Punto del centro de masa (CM) — siempre visible */}
+        {/* Punto del centro de masa (CM) — al "lado correcto" del pivote.
+            d_vis con signo: positivo = abajo del pivote, negativo = arriba. */}
         <mesh position={[0, -d_vis, 0.011]}>
           <sphereGeometry args={[0.020, 16, 16]} />
           <meshBasicMaterial color="#dc2626" />
@@ -363,8 +425,8 @@ export function PendulumMesh() {
           <meshBasicMaterial color="#ffffff" transparent opacity={0.85} />
         </mesh>
 
-        {/* Masa en el extremo */}
-        <mesh ref={massRef} position={[0, -L, 0]}>
+        {/* Masa en el extremo inferior — a distancia (L − a) del pivote */}
+        <mesh ref={massRef} position={[0, -r_mass, 0]}>
           <sphereGeometry args={[massRadius, 36, 36]} />
           <meshStandardMaterial
             ref={massMatRef}
@@ -376,11 +438,13 @@ export function PendulumMesh() {
           />
         </mesh>
 
-        {/* Conector */}
-        <mesh position={[0, -L + massRadius * 0.5, 0]}>
-          <cylinderGeometry args={[BAR_WIDTH * 0.4, BAR_WIDTH * 0.4, massRadius, 12]} />
-          <meshStandardMaterial color="#64748b" roughness={0.6} metalness={0.2} />
-        </mesh>
+        {/* Conector entre barra y masa */}
+        {r_mass > 0.05 && (
+          <mesh position={[0, -r_mass + massRadius * 0.5, 0]}>
+            <cylinderGeometry args={[barWidth * 0.4, barWidth * 0.4, massRadius, 12]} />
+            <meshStandardMaterial color="#64748b" roughness={0.6} metalness={0.2} />
+          </mesh>
+        )}
 
       </group>
 

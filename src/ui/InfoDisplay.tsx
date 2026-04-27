@@ -65,6 +65,12 @@ const REGIME_MAP: Record<DerivedQuantities['regime'], { label: string; color: st
   turbulent:  { label: 'Turbulento', color: '#dc2626', bg: '#fee2e2' },
 }
 
+const STABILITY_MAP: Record<DerivedQuantities['stability'], { label: string; color: string; bg: string }> = {
+  stable:   { label: 'Estable',   color: '#16a34a', bg: '#dcfce7' },
+  critical: { label: 'Crítico',   color: '#d97706', bg: '#fef3c7' },
+  unstable: { label: 'Inestable', color: '#dc2626', bg: '#fee2e2' },
+}
+
 export function InfoDisplay() {
   const [snapshot, setSnapshot] = useState<{ state: PendulumState; params: PendulumParams }>(() => ({
     state:  useSimulationStore.getState().state,
@@ -83,17 +89,21 @@ export function InfoDisplay() {
   const thetaDeg = snapshot.state.theta * 180 / Math.PI
   const params   = useSimulationStore(selectParams)
   const regime   = REGIME_MAP[d.regime]
+  const stab     = STABILITY_MAP[d.stability]
 
   // ── Cantidades de amortiguamiento ────────────────────────────────────────
   // τ = 2·I / b  — tiempo para que la amplitud caiga al 37% (e⁻¹)
   // Q = 2π·I·f / b — factor de calidad: cuántas oscilaciones dura (~50 en lab)
-  // P = b·ω²    — potencia instantánea disipada al fluido [W]
-  const tau   = d.b > 1e-12 ? (2 * d.I) / d.b : Infinity
-  const Q_val = d.b > 1e-12 ? (2 * Math.PI * d.I * d.f) / d.b : Infinity
+  //   Solo definida cuando hay oscilación (sistema estable, f > 0).
+  // P = b·ω²    — potencia disipada al fluido [W] (válida en cualquier estado)
+  const tau    = d.b > 1e-12 ? (2 * d.I) / d.b : Infinity
+  const Q_val  = d.b > 1e-12 && d.f > 0
+    ? (2 * Math.PI * d.I * d.f) / d.b
+    : Infinity
   const P_diss = d.b * snapshot.state.omega * snapshot.state.omega
 
   const fmtTau = isFinite(tau)   ? tau.toFixed(1)   : '∞'
-  const fmtQ   = isFinite(Q_val) && Q_val < 1e5 ? Q_val.toFixed(0) : '∞'
+  const fmtQ   = isFinite(Q_val) && Q_val < 1e5 ? Q_val.toFixed(0) : '—'
 
   return (
     <div style={s.panel}>
@@ -104,11 +114,24 @@ export function InfoDisplay() {
       <Row label="t — tiempo"       value={snapshot.state.time.toFixed(2)}  unit="s"     color={T.dim} />
 
       <SectionTitle>Dinámica</SectionTitle>
-      <Row label="T — período"     value={d.T.toFixed(4)}        unit="s"     color={T.orange} />
+      <Row label="T — período"
+        value={isFinite(d.T) ? d.T.toFixed(4) : '∞'}
+        unit={isFinite(d.T) ? 's' : ''}
+        color={T.orange} />
       <Row label="f — frecuencia"  value={d.f.toFixed(4)}        unit="Hz" />
       <Row label="I — inercia"     value={d.I.toExponential(4)}  unit="kg·m²" />
-      <Row label="d — CM → pivote" value={d.d.toFixed(4)}        unit="m" />
-      <Row label="Leq — equiv."    value={d.Leq.toFixed(4)}      unit="m"     color={T.dim} />
+      <Row label="d — CM → pivote"
+        value={d.d.toFixed(4)}
+        unit="m"
+        color={d.stability === 'unstable' ? '#dc2626' : T.text} />
+      <Row label="Leq — equiv."
+        value={isFinite(d.Leq) ? d.Leq.toFixed(4) : '—'}
+        unit={isFinite(d.Leq) ? 'm' : ''}
+        color={T.dim} />
+      <div style={s.row}>
+        <span style={s.rowLabel}>Estabilidad</span>
+        <span style={{ ...s.badge, color: stab.color, background: stab.bg }}>{stab.label}</span>
+      </div>
 
       <SectionTitle>Fluido</SectionTitle>
       <Row label="Medio"          value={params.fluid}              mono={false} color={T.orange} />

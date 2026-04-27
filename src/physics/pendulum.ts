@@ -9,13 +9,14 @@ import { getFluidProperties, computeDamping, computeReynolds, classifyRegime } f
 
 // ─── Parámetros del experimento real de laboratorio ───────────────────────────
 export const LAB_PARAMS: PendulumParams = {
-  L:      0.25,       // m   — distancia pivote → masa
-  m:      0.020,      // kg  — masa de la barra MDF
-  mr:     0.075,      // kg  — masa en el extremo
-  g:      9.78,       // m/s² — gravedad en Medellín, Colombia
-  theta0: 5 * Math.PI / 180,  // 5° en radianes
-  fluid:  'air',
-  tempC:  20,
+  L:           0.25,       // m   — longitud total de la barra
+  m:           0.020,      // kg  — masa de la barra MDF
+  mr:          0.075,      // kg  — masa en el extremo inferior
+  g:           9.78,       // m/s² — gravedad en Medellín, Colombia
+  theta0:      5 * Math.PI / 180,  // 5° en radianes
+  fluid:       'air',
+  tempC:       20,
+  pivotOffset: 0,          // m  — pivote en el extremo superior (default lab)
 }
 
 const DT = 0.001  // paso de integración: 1 ms (1000 pasos por segundo)
@@ -109,6 +110,11 @@ export function advancePendulum(
 /**
  * Calcula todas las cantidades físicas derivadas del estado actual.
  * Llamado a 30 Hz desde la UI para actualizar paneles e información.
+ *
+ * Estabilidad: depende del signo de d (distancia con signo del CM al pivote).
+ *   d > 0  → equilibrio estable: oscila con T = 2π√(I/(M·g·d))
+ *   d ≈ 0  → equilibrio crítico: T → ∞, no oscila (gira libre)
+ *   d < 0  → equilibrio inestable: péndulo invertido, T no definido
  */
 export function computeDerived(
   state: PendulumState,
@@ -120,11 +126,20 @@ export function computeDerived(
   const M    = params.m + params.mr
   const fluid = getFluidProperties(params.fluid, params.tempC)
 
-  // Período teórico (aproximación ángulos pequeños)
-  const T = 2 * Math.PI * Math.sqrt(I / (M * params.g * d))
-  const f = 1 / T
+  // Estabilidad según el signo de d
+  const stability: 'stable' | 'critical' | 'unstable' =
+    d > 1e-6  ? 'stable'
+    : d < -1e-6 ? 'unstable'
+    : 'critical'
 
-  // Energías mecánicas
+  // Período teórico — solo definido para equilibrio estable
+  const T = stability === 'stable'
+    ? 2 * Math.PI * Math.sqrt(I / (M * params.g * d))
+    : Infinity
+  const f = isFinite(T) && T > 0 ? 1 / T : 0
+
+  // Energías mecánicas (Ep puede ser negativa si d < 0 — eso es físicamente
+  // correcto: la energía DECRECE al alejarse de un equilibrio inestable).
   const Ec = 0.5 * I * state.omega * state.omega
   const Ep = M * params.g * d * (1 - Math.cos(state.theta))
   const Etotal = Ec + Ep
@@ -134,7 +149,7 @@ export function computeDerived(
   const regime = classifyRegime(Re)
   const b      = computeDamping(state.omega, params, fluid)
 
-  return { I, d, M, T, f, Leq, Ec, Ep, Etotal, Re, regime, b }
+  return { I, d, M, T, f, Leq, Ec, Ep, Etotal, Re, regime, b, stability }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
