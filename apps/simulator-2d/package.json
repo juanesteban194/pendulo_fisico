@@ -1,0 +1,37 @@
+{
+  "name": "@pendulo/simulator-2d",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Simulador 2D del péndulo físico — Vite + React Three Fiber. Será migrado a apps/web en Fase E.",
+  "type": "module",
+  "scripts": {
+    "dev":            "vite",
+    "build":          "tsc && vite build",
+    "preview":        "vite preview",
+    "test":           "vitest run --passWithNoTests",
+    "test:watch":     "vitest --passWithNoTests",
+    "test:coverage":  "vitest run --coverage --passWithNoTests",
+    "typecheck":      "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pendulo/physics":   "workspace:*",
+    "@react-three/drei":  "^9.112.0",
+    "@react-three/fiber": "^8.17.10",
+    "react":              "^18.3.1",
+    "react-dom":          "^18.3.1",
+    "recharts":           "^2.13.3",
+    "three":              "^0.169.0",
+    "zustand":            "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/react":              "^18.3.12",
+    "@types/react-dom":          "^18.3.1",
+    "@types/three":              "^0.169.0",
+    "@vitejs/plugin-react":      "^4.3.3",
+    "@vitest/coverage-v8":       "^2.1.5",
+    "jsdom":                     "^25.0.1",
+    "typescript":                "^5.6.3",
+    "vite":                      "^5.4.11",
+    "vitest":                    "^2.1.5"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "@pendulo/schemas",
+  "version": "0.1.0",
+  "description": "Esquemas Zod compartidos entre frontend, backend y contenido — fuente única de verdad para validación e inferencia de tipos.",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": ["src"],
+  "scripts": {
+    "test":          "vitest run --passWithNoTests",
+    "test:watch":    "vitest --passWithNoTests",
+    "typecheck":     "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest":     "^2.1.5"
+  }
+}

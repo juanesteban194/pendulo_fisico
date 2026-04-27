@@ -2,7 +2,20 @@
   "permissions": {
     "allow": [
       "Bash(curl -s \"http://localhost:5173/src/scene/PendulumMesh.tsx\" -o /tmp/pmesh_compiled.js)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(npm install *)",
+      "Bash(pnpm --version)",
+      "Bash(mv apps/simulator-2d/src/physics/rk4.ts       packages/physics/src/rk4.ts)",
+      "Bash(mv apps/simulator-2d/src/physics/geometry.ts  packages/physics/src/geometry.ts)",
+      "Bash(mv apps/simulator-2d/src/physics/fluids.ts    packages/physics/src/fluids.ts)",
+      "Bash(mv apps/simulator-2d/src/physics/pendulum.ts  packages/physics/src/pendulum.ts)",
+      "Bash(rmdir apps/simulator-2d/src/physics)",
+      "Bash(pnpm --filter @pendulo/physics test)",
+      "Bash(pnpm --filter @pendulo/simulator-2d typecheck)",
+      "Bash(pnpm --filter @pendulo/simulator-2d dev)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(curl -s \"http://localhost:5173/src/scene/PendulumMesh.tsx\" -o /tmp/m.js)",
+      "Bash(pnpm test *)"
     ]
   }
 }

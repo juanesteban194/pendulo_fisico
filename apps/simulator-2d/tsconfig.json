@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // ── Target y entorno (Vite/browser) ─────────────────────────────────────
+    "target":  "ES2020",
+    "lib":     ["ES2020", "DOM", "DOM.Iterable"],
+    "jsx":     "react-jsx",
+
+    // ── Modo bundler: TS solo verifica, Vite compila ────────────────────────
+    "moduleResolution":          "bundler",
+    "allowImportingTsExtensions": true,
+    "moduleDetection":            "force",
+    "useDefineForClassFields":    true,
+    "noEmit":                     true,
+
+    // Importar paquetes del workspace que exponen .ts directamente
+    // (verbatimModuleSyntax viene del base)
+    "verbatimModuleSyntax": false
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
