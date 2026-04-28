@@ -29,7 +29,12 @@
       "Bash(python3 -c 'import sys, json; r=json.load\\(sys.stdin\\); print\\(f\"samples={r[\\\\\"meta\\\\\"][\\\\\"samples\\\\\"]}  t[0..-1]={r[\\\\\"t\\\\\"][0]:.3f}..{r[\\\\\"t\\\\\"][-1]:.3f}  theta[0..-1]={r[\\\\\"theta\\\\\"][0]:.4f}..{r[\\\\\"theta\\\\\"][-1]:.4f}  Etotal_drift={\\(r[\\\\\"Etotal\\\\\"][-1]-r[\\\\\"Etotal\\\\\"][0]\\)/r[\\\\\"Etotal\\\\\"][0]*100:.3f}%\"\\)')",
       "Bash(node -e 'let d=\"\"; process.stdin.on\\(\"data\", c=>d+=c\\).on\\(\"end\", \\(\\)=>{ const r=JSON.parse\\(d\\); console.log\\(\"samples=\", r.meta.samples, \"  t=[\" + r.t[0].toFixed\\(3\\) + \"...\" + r.t[r.t.length-1].toFixed\\(3\\) + \"]  theta=[\" + r.theta[0].toFixed\\(4\\) + \"...\" + r.theta[r.theta.length-1].toFixed\\(4\\) + \"]  E_drift=\" + \\(\\(r.Etotal[r.Etotal.length-1]-r.Etotal[0]\\)/r.Etotal[0]*100\\).toFixed\\(3\\) + \"%\"\\); }\\)')",
       "Bash(curl -s -X POST http://localhost:4000/api/v1/exercises/validate -H 'Content-Type: application/json' -d '{\"exerciseId\":\"s5-period-physical\",\"userAnswer\":2.5}')",
-      "Bash(pkill -f \"tsx watch\")"
+      "Bash(pkill -f \"tsx watch\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(pnpm --filter @pendulo/ui typecheck)",
+      "Bash(uuidgen)",
+      "Bash(curl -s -X POST http://localhost:3000/api/v1/exercises/validate -H 'Content-Type: application/json' -d '{\"exerciseId\":\"s5-period-physical\",\"userAnswer\":0.985,\"sessionId\":\"__CMDSUB_OUTPUT__')"
     ]
   }
 }
