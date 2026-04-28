@@ -1,0 +1,98 @@
+/* ─── TOKENS DE DISEÑO ─────────────────────────────────────────────────────
+ *
+ * Fuente única de verdad de la identidad visual. Los componentes nunca
+ * deben usar valores hex literales — siempre vía Tailwind (`bg-bg-surface`)
+ * o vía var() (`color: rgb(var(--text-primary))`).
+ *
+ * Los valores son los del brief maestro (sección 3). Cualquier cambio
+ * aquí afecta toda la plataforma.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* KaTeX styles — necesarios para que las ecuaciones rendericen bien */
+@import 'katex/dist/katex.min.css';
+
+@layer base {
+  :root {
+    /* ── Fondo y superficies ─────────────────────────────────────────── */
+    --bg-primary:  250 251 252;   /* #fafbfc */
+    --bg-surface:  255 255 255;   /* #ffffff */
+    --bg-elevated: 244 246 248;   /* #f4f6f8 */
+    --bg-tinted:   238 242 245;   /* #eef2f5 */
+
+    /* ── Bordes ───────────────────────────────────────────────────────── */
+    --border-subtle:  229 233 237;  /* #e5e9ed */
+    --border-default: 209 215 221;  /* #d1d7dd */
+
+    /* ── Texto ────────────────────────────────────────────────────────── */
+    --text-primary:   26  31  38;   /* #1a1f26 */
+    --text-secondary: 74  85  98;   /* #4a5562 */
+    --text-tertiary:  138 149 163;  /* #8a95a3 */
+    --text-label:     107 118 132;  /* #6b7684 */
+
+    /* ── Acentos del simulador (RESPETAR) ─────────────────────────────── */
+    --accent-orange:      255 107  53;  /* #ff6b35 */
+    --accent-orange-soft: 255 241 236;  /* #fff1ec */
+    --accent-purple:      139  92 246;  /* #8b5cf6 */
+    --accent-blue:         37  99 235;  /* #2563eb */
+    --accent-green:        16 185 129;  /* #10b981 */
+    --accent-amber:       245 158  11;  /* #f59e0b */
+
+    /* ── Estados ──────────────────────────────────────────────────────── */
+    --status-success:  16 185 129;  /* #10b981 */
+    --status-warning: 245 158  11;  /* #f59e0b */
+    --status-error:   239  68  68;  /* #ef4444 */
+    --status-info:     59 130 246;  /* #3b82f6 */
+
+    /* ── Sombras (whiteboard limpio) ──────────────────────────────────── */
+    --shadow-sm: 0 1px  2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.08);
+  }
+
+  html {
+    color-scheme: light;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: rgb(var(--bg-primary));
+    color: rgb(var(--text-primary));
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
+
+  /* Honra prefers-reduced-motion (sección 9 del brief) */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Etiqueta de sección estilo "PARÁMETROS" / "GEOMETRÍA DEL PÉNDULO"
+   * (replica del simulador 2D) */
+  .ui-label {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgb(var(--text-label));
+  }
+
+  /* Valor numérico tipo panel del simulador — naranja, mono, alineado a la
+   * derecha con su unidad gris a un lado. */
+  .ui-numeric {
+    font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+    font-feature-settings: 'tnum' 1;
+    color: rgb(var(--accent-orange));
+  }
+}

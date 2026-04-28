@@ -1,0 +1,103 @@
+// ─── SCHEMA PRISMA — SQLite + cliente JS ─────────────────────────────────────
+//
+// Modelos:
+//   Section   — secciones pedagógicas (espejo de packages/content/src/sections/*.mdx)
+//   Exercise  — ejercicios asociados a una sección (numeric/multiple/open)
+//   Session   — UUID anónimo del navegador (fase 1: sin cuentas)
+//   Attempt   — historial de respuestas (sessionId × exerciseId)
+//   Progress  — secciones completadas por sesión
+//
+// La fuente de verdad del contenido está en packages/content (MDX).
+// El seed lee los MDX y rellena Section/Exercise. Migrar a PostgreSQL
+// en el futuro requiere solo cambiar `provider` y `DATABASE_URL`.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Sección pedagógica ──────────────────────────────────────────────────────
+model Section {
+  id               Int        @id @default(autoincrement())
+  slug             String     @unique               // kebab-case ASCII
+  order            Int        @unique               // 0..8
+  title            String
+  summary          String
+  prerequisites    String     @default("[]")        // JSON array de slugs
+  estimatedMinutes Int
+  contentMdx       String                            // cuerpo MDX completo
+
+  exercises Exercise[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sections")
+}
+
+// ─── Ejercicio ───────────────────────────────────────────────────────────────
+model Exercise {
+  id             String   @id                        // ej "s2-period-medellin"
+  sectionId      Int
+  prompt         String
+  expectedAnswer String                               // JSON serializado de ExpectedAnswer
+  tolerance      Float?                               // solo numéricos
+  unit           String?                              // unidad humana ("m", "s", ...)
+  feedbackOk     String
+  feedbackFail   String
+
+  section  Section   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  attempts Attempt[]
+
+  createdAt DateTime @default(now())
+
+  @@index([sectionId])
+  @@map("exercises")
+}
+
+// ─── Sesión anónima ──────────────────────────────────────────────────────────
+model Session {
+  id        String   @id                              // UUID generado en el frontend
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attempts Attempt[]
+  progress Progress[]
+
+  @@map("sessions")
+}
+
+// ─── Intento de un ejercicio ─────────────────────────────────────────────────
+model Attempt {
+  id         Int      @id @default(autoincrement())
+  sessionId  String
+  exerciseId String
+  userAnswer String                                   // siempre serializado a string
+  correct    Boolean
+  createdAt  DateTime @default(now())
+
+  session  Session  @relation(fields: [sessionId],  references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([exerciseId])
+  @@map("attempts")
+}
+
+// ─── Progreso por sección ────────────────────────────────────────────────────
+model Progress {
+  id        Int      @id @default(autoincrement())
+  sessionId String
+  sectionId Int
+  completed Boolean
+  updatedAt DateTime @updatedAt
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, sectionId])
+  @@map("progress")
+}

@@ -1,0 +1,39 @@
+---
+slug: amortiguamiento
+order: 6
+title: Amortiguamiento — el péndulo en el mundo real
+summary: Arrastre del fluido + fricción interna. Envolvente exponencial, Q y τ. Reynolds.
+prerequisites: ['pendulo-fisico']
+estimatedMinutes: 14
+---
+
+{/* TODO Fase D — sección 6 */}
+
+# Amortiguamiento: el péndulo en el mundo real
+
+> **Anzuelo:** El péndulo de una guitarra suena fuerte y se va apagando.
+> Es la misma matemática.
+
+## Modelo amortiguado
+
+`I θ̈ + b θ̇ + M g d θ = 0`
+
+Coeficiente del lab (en aire, ω pequeño): `b ≈ 6.04 × 10⁻⁴ N·m·s`.
+
+## Solución sub-amortiguada
+
+`θ(t) = θ₀ e^(-t/τ) cos(ω_d t + φ)`
+
+con `τ = 2I/b ≈ 16.9 s` y `ω_d = √(ω₀² - (b/2I)²)`.
+
+## Factor de calidad
+
+`Q = ω₀ τ / 2`  → para el lab: **Q ≈ 54** (durabilidad de la oscilación).
+
+## Reynolds y régimen del flujo
+
+`Re = ρ v L / μ` → laminar (Re < 1) / transición / turbulento (Re > 1000).
+
+## Ejercicios
+
+{/* calcular Q dado τ; multiple-choice: ¿qué medio amortigua más rápido? */}

@@ -98,6 +98,7 @@ describe('fluids — propiedades y temperatura', () => {
     // Con amortiguamiento estructural dominante, ratio real es ~0.6-1.5x
     // La glicerina sí es más viscosa pero el structural damping iguala la diferencia
     expect(bGly).toBeGreaterThan(0)
+    expect(bWat).toBeGreaterThan(0)
   })
 
   it('amortiguamiento en aceite > amortiguamiento en aire (>>100×)', () => {

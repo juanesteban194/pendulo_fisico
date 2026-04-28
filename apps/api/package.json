@@ -1,0 +1,46 @@
+{
+  "name": "@pendulo/api",
+  "version": "0.1.0",
+  "description": "API REST de la plataforma educativa — Fastify + Prisma + SQLite. Sirve contenido, valida ejercicios, simula físicas y registra progreso anónimo.",
+  "private": true,
+  "type": "module",
+  "main": "./src/server.ts",
+  "scripts": {
+    "dev":        "tsx watch --env-file=.env src/server.ts",
+    "build":      "tsc -p tsconfig.build.json",
+    "start":      "node --env-file=.env dist/server.js",
+    "test":       "vitest run",
+    "test:watch": "vitest",
+    "typecheck":  "tsc --noEmit",
+    "db:migrate": "prisma migrate dev",
+    "db:reset":   "prisma migrate reset --force --skip-seed && pnpm db:seed",
+    "db:seed":    "tsx prisma/seed.ts",
+    "db:studio":  "prisma studio",
+    "prisma:gen": "prisma generate"
+  },
+  "dependencies": {
+    "@fastify/cors":              "^10.0.2",
+    "@fastify/rate-limit":        "^10.2.2",
+    "@fastify/sensible":          "^6.0.2",
+    "@pendulo/content":           "workspace:*",
+    "@pendulo/physics":           "workspace:*",
+    "@pendulo/schemas":           "workspace:*",
+    "@prisma/client":             "^5.22.0",
+    "fastify":                    "^5.2.0",
+    "fastify-type-provider-zod":  "^4.0.2",
+    "zod":                        "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node":      "^20.16.10",
+    "@types/supertest": "^6.0.2",
+    "pino-pretty":      "^11.3.0",
+    "prisma":           "^5.22.0",
+    "supertest":        "^7.0.0",
+    "tsx":              "^4.19.2",
+    "typescript":       "^5.6.3",
+    "vitest":           "^2.1.5"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}

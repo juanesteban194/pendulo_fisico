@@ -1,0 +1,46 @@
+---
+slug: pendulo-fisico
+order: 5
+title: El péndulo físico real
+summary: CM y distancia al pivote. T = 2π√(I/(M·g·d)). Discusión honesta del error 5.3%.
+prerequisites: ['momento-inercia']
+estimatedMinutes: 13
+---
+
+{/* TODO Fase D — sección 5 */}
+
+# El péndulo físico real
+
+> **Anzuelo:** Una raqueta de tenis suspendida del mango oscila distinto que un
+> bate de baseball del mismo largo. Ambos son péndulos físicos — su período
+> depende de **dónde está el centro de masa**.
+
+## Centro de masa
+
+`d = (m_b · L/2 + m_e · L) / (m_b + m_e)`  → para el lab: **d ≈ 0.2237 m**
+
+(No es L = 0.25 m porque la barra **sí** tiene masa apreciable.)
+
+## Ecuación de movimiento
+
+Newton rotacional: `I θ̈ = -M g d sin(θ)` con `M = m_b + m_e`.
+
+## Período general
+
+`T = 2π √(I / (M g d))`
+
+## Longitud equivalente
+
+`L_eq = I / (M d)` → reduce el péndulo físico a uno simple equivalente.
+
+Para el lab: **L_eq ≈ 0.2402 m**, **T_calc ≈ 0.9847 s**.
+
+## Honestidad pedagógica: la discrepancia del 5.3%
+
+El laboratorio midió **T_lab = 1.04 s**. Nuestro modelo predice 0.985 s.
+**Error relativo: 5.3%**. Esto no es un fallo — es la firma de los modelos
+idealizados frente a la materia real.
+
+## Ejercicio abierto
+
+{/* OpenExercise: ¿qué fuentes de error explican el 5.3%? */}

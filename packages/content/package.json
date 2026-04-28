@@ -1,0 +1,30 @@
+{
+  "name": "@pendulo/content",
+  "version": "0.1.0",
+  "description": "Contenido pedagógico MDX de las 8 secciones del péndulo físico. Fuente de verdad para el seed del API.",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./sections/*": "./src/sections/*"
+  },
+  "files": ["src"],
+  "scripts": {
+    "test":      "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pendulo/schemas": "workspace:*",
+    "gray-matter":      "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.10",
+    "typescript":  "^5.6.3",
+    "vitest":      "^2.1.5"
+  }
+}

@@ -1,0 +1,41 @@
+---
+slug: rk4
+order: 7
+title: Integración numérica — cómo simula el computador
+summary: Por qué Euler explota y RK4 conserva la energía. Una pregunta hecha 4 veces.
+prerequisites: ['amortiguamiento']
+estimatedMinutes: 10
+---
+
+{/* TODO Fase D — sección 7 */}
+
+# Integración numérica: cómo simula el computador
+
+> **Anzuelo:** La ecuación con `sin(θ)` no tiene fórmula cerrada. Para
+> simularla hay que avanzar paso a paso — pero no todo paso es igual.
+
+## Euler explícito (lo "obvio")
+
+`θ_{n+1} = θ_n + ω_n Δt`
+`ω_{n+1} = ω_n + α_n Δt`
+
+Problema: la energía se infla artificialmente — el péndulo aparenta ganar
+energía a cada paso.
+
+## RK4 (Runge-Kutta orden 4)
+
+> **Analogía:** preguntar la dirección **4 veces** antes de dar el paso, en
+> lugar de 1.
+
+Cuatro evaluaciones por paso (k₁, k₂, k₃, k₄) y promedio ponderado:
+
+```
+y_{n+1} = y_n + (k₁ + 2k₂ + 2k₃ + k₄) · Δt / 6
+```
+
+Error local `O(Δt⁵)`. Para `Δt = 1 ms` la energía se conserva con error
+< 0.1% por período.
+
+## Ejercicios
+
+{/* slider de Δt mostrando Euler vs RK4; conceptual: ¿por qué RK4 conserva mejor? */}

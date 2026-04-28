@@ -15,7 +15,21 @@
       "Bash(pnpm --filter @pendulo/simulator-2d dev)",
       "Bash(curl -s http://localhost:5173)",
       "Bash(curl -s \"http://localhost:5173/src/scene/PendulumMesh.tsx\" -o /tmp/m.js)",
-      "Bash(pnpm test *)"
+      "Bash(pnpm test *)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm --filter @pendulo/physics typecheck)",
+      "Bash(pnpm exec *)",
+      "Bash(pnpm --filter @pendulo/api test)",
+      "Bash(pnpm --filter @pendulo/api dev)",
+      "Bash(curl -s http://localhost:4000/health)",
+      "Bash(curl -s http://localhost:4000/api/v1/content/sections)",
+      "Bash(python3 -c 'import sys, json; r=json.load\\(sys.stdin\\); print\\(f\"samples={r[\\\\\"meta\\\\\"][\\\\\"samples\\\\\"]} t[0]={r[\\\\\"t\\\\\"][0]:.3f} t[-1]={r[\\\\\"t\\\\\"][-1]:.3f} theta[0]={r[\\\\\"theta\\\\\"][0]:.4f} theta[-1]={r[\\\\\"theta\\\\\"][-1]:.4f}\"\\)')",
+      "Bash(python3 -c 'import sys, json; r=json.load\\(sys.stdin\\); print\\(f\"samples={r[\\\\\"meta\\\\\"][\\\\\"samples\\\\\"]}  t[0..-1]={r[\\\\\"t\\\\\"][0]:.3f}..{r[\\\\\"t\\\\\"][-1]:.3f}  theta[0..-1]={r[\\\\\"theta\\\\\"][0]:.4f}..{r[\\\\\"theta\\\\\"][-1]:.4f}\"\\)')",
+      "Bash(python3 -c 'import sys, json; r=json.load\\(sys.stdin\\); print\\(f\"samples={r[\\\\\"meta\\\\\"][\\\\\"samples\\\\\"]}  t[0..-1]={r[\\\\\"t\\\\\"][0]:.3f}..{r[\\\\\"t\\\\\"][-1]:.3f}  theta[0..-1]={r[\\\\\"theta\\\\\"][0]:.4f}..{r[\\\\\"theta\\\\\"][-1]:.4f}  Etotal_drift={\\(r[\\\\\"Etotal\\\\\"][-1]-r[\\\\\"Etotal\\\\\"][0]\\)/r[\\\\\"Etotal\\\\\"][0]*100:.3f}%\"\\)')",
+      "Bash(node -e 'let d=\"\"; process.stdin.on\\(\"data\", c=>d+=c\\).on\\(\"end\", \\(\\)=>{ const r=JSON.parse\\(d\\); console.log\\(\"samples=\", r.meta.samples, \"  t=[\" + r.t[0].toFixed\\(3\\) + \"...\" + r.t[r.t.length-1].toFixed\\(3\\) + \"]  theta=[\" + r.theta[0].toFixed\\(4\\) + \"...\" + r.theta[r.theta.length-1].toFixed\\(4\\) + \"]  E_drift=\" + \\(\\(r.Etotal[r.Etotal.length-1]-r.Etotal[0]\\)/r.Etotal[0]*100\\).toFixed\\(3\\) + \"%\"\\); }\\)')",
+      "Bash(curl -s -X POST http://localhost:4000/api/v1/exercises/validate -H 'Content-Type: application/json' -d '{\"exerciseId\":\"s5-period-physical\",\"userAnswer\":2.5}')",
+      "Bash(pkill -f \"tsx watch\")"
     ]
   }
 }

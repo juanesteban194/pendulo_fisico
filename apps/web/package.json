@@ -1,0 +1,40 @@
+{
+  "name": "@pendulo/web",
+  "version": "0.1.0",
+  "description": "Plataforma educativa Péndulo Físico — Next.js 14 (App Router). Frontend público.",
+  "private": true,
+  "scripts": {
+    "dev":       "next dev --port 3000",
+    "build":     "next build",
+    "start":     "next start --port 3000",
+    "lint":      "next lint",
+    "test":      "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pendulo/physics":  "workspace:*",
+    "@pendulo/schemas":  "workspace:*",
+    "@pendulo/ui":       "workspace:*",
+    "framer-motion":     "^11.15.0",
+    "katex":             "^0.16.11",
+    "next":              "^14.2.18",
+    "react":             "^18.3.1",
+    "react-dom":         "^18.3.1",
+    "react-katex":       "^3.0.1",
+    "recharts":          "^2.13.3",
+    "zustand":           "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/node":       "^20.16.10",
+    "@types/react":      "^18.3.12",
+    "@types/react-dom":  "^18.3.1",
+    "@types/react-katex": "^3.0.4",
+    "autoprefixer":      "^10.4.20",
+    "eslint":            "^8.57.1",
+    "eslint-config-next": "^14.2.18",
+    "postcss":           "^8.4.49",
+    "tailwindcss":       "^3.4.15",
+    "typescript":        "^5.6.3",
+    "vitest":            "^2.1.5"
+  }
+}

@@ -1,0 +1,39 @@
+---
+slug: momento-inercia
+order: 4
+title: La barra rígida — aparece el momento de inercia
+summary: La cuerda se vuelve barra. La masa distribuida obliga a hablar de I.
+prerequisites: ['energias']
+estimatedMinutes: 11
+---
+
+{/* TODO Fase D — sección 4 */}
+
+# La barra rígida: aparece el momento de inercia
+
+> **Anzuelo:** Si reemplazas la cuerda por una barra de madera, ¿el período
+> sigue siendo `T = 2π√(L/g)`? **No.** Tenemos que contar cómo está
+> distribuida la masa.
+
+## Definición
+
+`I = ∫ r² dm` — el "estorbo" para rotar.
+
+## Casos del péndulo del laboratorio
+
+- **Barra delgada respecto a un extremo:** `I_barra = (1/3) m_b L²`
+- **Masa puntual en el extremo:** `I_masa = m_e L²`
+- **Total:** `I_total = (1/3) m_b L² + m_e L²`
+
+## Datos del laboratorio (Medellín)
+
+| Magnitud | Valor                |
+|----------|----------------------|
+| L        | 0.25 m               |
+| m_b      | 0.020 kg (barra MDF) |
+| m_e      | 0.075 kg (acero)     |
+| I_total  | **5.1042 × 10⁻³ kg·m²** |
+
+## Ejercicio
+
+{/* calcular I_total con datos lab; tolerancia ±1% */}
