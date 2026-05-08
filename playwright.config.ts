@@ -17,11 +17,18 @@ export default defineConfig({
     { name: 'msedge', use: { ...devices['Desktop Chrome'], channel: 'msedge' } },
   ],
 
-  // Levanta Next.js antes de correr los tests
-  webServer: {
-    command: 'pnpm --filter @pendulo/web dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
-  },
+  webServer: [
+    {
+      command: 'pnpm --filter @pendulo/api dev',
+      url: 'http://localhost:4000/health',
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+    },
+    {
+      command: 'pnpm --filter @pendulo/web dev',
+      url: 'http://localhost:3000',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
+  ],
 })
