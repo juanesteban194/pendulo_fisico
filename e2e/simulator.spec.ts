@@ -38,7 +38,7 @@ test.describe('Simulador R3F (Sección 8)', () => {
     await section.locator('canvas').waitFor({ state: 'visible', timeout: 20_000 })
 
     // El ControlPanel debe tener el botón "Lab" (reset a parámetros del laboratorio)
-    await expect(section.getByText('Lab')).toBeVisible({ timeout: 3000 })
+    await expect(section.getByRole('button', { name: 'Lab' })).toBeVisible({ timeout: 3000 })
   })
 
 })

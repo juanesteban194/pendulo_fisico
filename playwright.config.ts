@@ -14,7 +14,7 @@ export default defineConfig({
   },
 
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'msedge', use: { ...devices['Desktop Chrome'], channel: 'msedge' } },
   ],
 
   // Levanta Next.js antes de correr los tests
