@@ -1,34 +1,19 @@
 // ─── <SectionShell /> ────────────────────────────────────────────────────────
 //
-// Wrapper de cada sección educativa. Renderiza:
-//   • Eyebrow opcional ("Capítulo 2", "Anzuelo", …)
-//   • Número (formato "01", "02", …)
-//   • Título grande
-//   • Tiempo estimado de lectura (opcional)
-//   • Children (cuerpo MDX)
-//
-// Marca el elemento con `data-section-slug` para que `useActiveSection` en
-// apps/web lo detecte vía IntersectionObserver y dispare el cambio de pieza
-// en el SVG sticky de la izquierda.
-//
-// Layout: este componente NO crea las dos columnas (sticky stage + scroll
-// content). Eso es responsabilidad de la página que lo renderiza. SectionShell
-// es solo el contenido de la columna derecha de una sección.
-//
-// Server-Component-friendly (ningún hook, ningún estado).
+// Wrapper de cada sección educativa con animación scroll-reveal del header.
+// El número y eyebrow entran con stagger; el título grande con fade-up.
+// Honra prefers-reduced-motion vía useReducedMotion.
+
+'use client'
 
 import type { ReactNode } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 
 export interface SectionShellProps {
-  /** Slug único: "pivote", "pendulo-simple", … (debe coincidir con MDX). */
   slug: string
-  /** Número 0..8 del capítulo. */
   number: number
-  /** Título grande de la sección. */
   title: string
-  /** Texto pequeño arriba del título (opcional): "Capítulo", "Anzuelo", …  */
   eyebrow?: string
-  /** Tiempo estimado de lectura, e.g. "8 min". */
   estimatedTime?: string
   children: ReactNode
   className?: string
@@ -43,9 +28,17 @@ export function SectionShell({
   children,
   className = '',
 }: SectionShellProps) {
-  // Padding inferior generoso: el siguiente SectionShell empieza con aire.
-  // scroll-mt-24 evita que el header de la sección quede pegado al borde
-  // superior cuando el usuario hace scroll a un slug específico.
+  const reduceMotion = useReducedMotion()
+
+  const fadeUp = reduceMotion
+    ? {}
+    : {
+        initial: { opacity: 0, y: 24 },
+        whileInView: { opacity: 1, y: 0 },
+        viewport: { once: true, amount: 0.2 },
+        transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+      }
+
   return (
     <section
       id={slug}
@@ -58,7 +51,7 @@ export function SectionShell({
       ].join(' ')}
       aria-labelledby={`${slug}-heading`}
     >
-      <header className="mb-8 flex flex-col gap-3">
+      <motion.header className="mb-8 flex flex-col gap-3" {...fadeUp}>
         <div className="flex items-baseline gap-3">
           <span className="font-mono text-xs font-medium tabular-nums text-accent-orange">
             {String(number).padStart(2, '0')}
@@ -74,11 +67,21 @@ export function SectionShell({
         >
           {title}
         </h2>
-      </header>
+      </motion.header>
 
-      <div className="space-y-6 text-base leading-relaxed text-text-secondary">
+      <motion.div
+        className="space-y-6 text-base leading-relaxed text-text-secondary"
+        {...(reduceMotion
+          ? {}
+          : {
+              initial: { opacity: 0, y: 16 },
+              whileInView: { opacity: 1, y: 0 },
+              viewport: { once: true, amount: 0.1 },
+              transition: { duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+            })}
+      >
         {children}
-      </div>
+      </motion.div>
     </section>
   )
 }

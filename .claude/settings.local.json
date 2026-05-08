@@ -43,7 +43,18 @@
       "Bash(ls \"C:\\\\Users\\\\juane\\\\.claude\\\\projects\\\\c--Users-juane-Downloads-pendulo-fisico\\\\memory\\\\\" 2>/dev/null || echo \"No memory directory\")",
       "Bash(ls \"C:/Users/juane/.claude/projects/c--Users-juane-Downloads-pendulo-fisico/memory/\" 2>/dev/null || echo \"No memory directory\")",
       "Bash(pnpm --filter @pendulo/web typecheck)",
-      "Bash(npx pnpm *)"
+      "Bash(npx pnpm *)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d.get\\('types','NONE'\\), d.get\\('typings','NONE'\\), d.get\\('exports',{}\\).get\\('.',{}\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); deps=d.get\\('devDependencies',{}\\); print\\({k:v for k,v in deps.items\\(\\) if 'three' in k.lower\\(\\) or 'types' in k.lower\\(\\)}\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(node node_modules/.bin/playwright install chromium)",
+      "Bash(node_modules/.bin/playwright.CMD install *)",
+      "Bash(npx playwright *)",
+      "Bash(rm -rf \"C:\\\\Users\\\\juane\\\\AppData\\\\Local\\\\ms-playwright\\\\__dirlock\" 2>/dev/null; echo \"removed\")",
+      "Bash(ls \"C:\\\\Users\\\\juane\\\\AppData\\\\Local\\\\ms-playwright\" 2>/dev/null | head -10)",
+      "Bash(node_modules/.bin/playwright.CMD test *)"
     ]
   }
 }
