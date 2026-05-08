@@ -41,7 +41,9 @@
       "Bash(ConvertTo-Csv -NoTypeInformation)",
       "Bash(Out-String)",
       "Bash(ls \"C:\\\\Users\\\\juane\\\\.claude\\\\projects\\\\c--Users-juane-Downloads-pendulo-fisico\\\\memory\\\\\" 2>/dev/null || echo \"No memory directory\")",
-      "Bash(ls \"C:/Users/juane/.claude/projects/c--Users-juane-Downloads-pendulo-fisico/memory/\" 2>/dev/null || echo \"No memory directory\")"
+      "Bash(ls \"C:/Users/juane/.claude/projects/c--Users-juane-Downloads-pendulo-fisico/memory/\" 2>/dev/null || echo \"No memory directory\")",
+      "Bash(pnpm --filter @pendulo/web typecheck)",
+      "Bash(npx pnpm *)"
     ]
   }
 }
