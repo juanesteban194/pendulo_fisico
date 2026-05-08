@@ -34,7 +34,14 @@
       "Bash(pkill -f \"next dev\")",
       "Bash(pnpm --filter @pendulo/ui typecheck)",
       "Bash(uuidgen)",
-      "Bash(curl -s -X POST http://localhost:3000/api/v1/exercises/validate -H 'Content-Type: application/json' -d '{\"exerciseId\":\"s5-period-physical\",\"userAnswer\":0.985,\"sessionId\":\"__CMDSUB_OUTPUT__')"
+      "Bash(curl -s -X POST http://localhost:3000/api/v1/exercises/validate -H 'Content-Type: application/json' -d '{\"exerciseId\":\"s5-period-physical\",\"userAnswer\":0.985,\"sessionId\":\"__CMDSUB_OUTPUT__')",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\juane\\\\Downloads\\\\pendulo_fisico\" -Recurse -Force)",
+      "Bash(Select-Object -Property FullName)",
+      "Bash(Sort-Object FullName)",
+      "Bash(ConvertTo-Csv -NoTypeInformation)",
+      "Bash(Out-String)",
+      "Bash(ls \"C:\\\\Users\\\\juane\\\\.claude\\\\projects\\\\c--Users-juane-Downloads-pendulo-fisico\\\\memory\\\\\" 2>/dev/null || echo \"No memory directory\")",
+      "Bash(ls \"C:/Users/juane/.claude/projects/c--Users-juane-Downloads-pendulo-fisico/memory/\" 2>/dev/null || echo \"No memory directory\")"
     ]
   }
 }
