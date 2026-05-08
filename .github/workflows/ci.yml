@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:4000
+
+      - name: Unit tests (vitest)
+        run: pnpm test
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: build-and-test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Instalar navegadores Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Preparar DB para la API
+        run: |
+          cd apps/api
+          cp .env.example .env || true
+          echo "DATABASE_URL=file:./prisma/dev.db" >> .env
+          pnpm exec prisma migrate deploy
+          pnpm db:seed
+        env:
+          DATABASE_URL: file:./prisma/dev.db
+
+      - name: Correr tests E2E
+        run: pnpm test:e2e
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:4000
+          CI: true
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

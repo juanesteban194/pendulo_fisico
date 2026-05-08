@@ -9,7 +9,6 @@ const L   = 0.25
 const M   = 0.020 + 0.075
 const G   = 9.78
 const D   = (0.020 * L / 2 + 0.075 * L) / M
-const I   = (1 / 3) * 0.020 * L ** 2 + 0.075 * L ** 2
 const TH0 = 5 * Math.PI / 180
 
 const Ep_max = M * G * D * (1 - Math.cos(TH0))

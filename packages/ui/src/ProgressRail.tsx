@@ -73,6 +73,7 @@ export function ProgressRail({ sections, activeSlug, className = '' }: ProgressR
               type="button"
               onClick={() => scrollToSlug(s.slug)}
               style={{ top: `${yPct}%` }}
+              data-slug={s.slug}
               className={[
                 'absolute left-1/2 -translate-x-1/2 -translate-y-1/2',
                 'flex items-center justify-center',

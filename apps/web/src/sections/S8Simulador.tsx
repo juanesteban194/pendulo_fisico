@@ -1,10 +1,6 @@
 // ─── Sección 8 — El simulador completo ───────────────────────────────────────
-//
-// Fase E migrará el simulador R3F desde apps/simulator-2d/ a este espacio.
-// Por ahora incluye el contenido de los 5 retos finales y un placeholder
-// con instrucciones para correr el simulador en modo independiente.
 
-import { SectionShell, EquationBlock } from '@pendulo/ui'
+import { SectionShell } from '@pendulo/ui'
 import { InlineStage } from '@/components/InlineStage'
 import { SimulatorEmbed } from '@/sections/SimulatorEmbed'
 

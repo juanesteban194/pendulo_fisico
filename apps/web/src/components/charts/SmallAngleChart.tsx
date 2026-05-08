@@ -10,7 +10,6 @@ import {
   Legend, ResponsiveContainer,
 } from 'recharts'
 
-function deg(rad: number) { return rad * 180 / Math.PI }
 function generateData() {
   const pts = []
   for (let d = 0; d <= 30; d += 0.5) {

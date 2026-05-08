@@ -40,3 +40,12 @@ Thumbs.db
 # Prisma
 *.db
 *.db-journal
+
+# Playwright
+/playwright-report/
+/test-results/
+/blob-report/
+
+# Lockfiles alternativos (este proyecto usa pnpm exclusivamente)
+package-lock.json
+yarn.lock
