@@ -54,7 +54,10 @@
       "Bash(npx playwright *)",
       "Bash(rm -rf \"C:\\\\Users\\\\juane\\\\AppData\\\\Local\\\\ms-playwright\\\\__dirlock\" 2>/dev/null; echo \"removed\")",
       "Bash(ls \"C:\\\\Users\\\\juane\\\\AppData\\\\Local\\\\ms-playwright\" 2>/dev/null | head -10)",
-      "Bash(node_modules/.bin/playwright.CMD test *)"
+      "Bash(node_modules/.bin/playwright.CMD test *)",
+      "Bash(echo \"API started in background, PID: $!\")",
+      "Bash(pnpm --filter @pendulo/web dev)",
+      "Bash(echo \"Web started in background, PID: $!\")"
     ]
   }
 }
