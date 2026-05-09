@@ -5,14 +5,21 @@
 // pestaña nueva — el simulador a pantalla completa es la experiencia primaria.
 
 import { motion, useReducedMotion } from 'framer-motion'
+import { Icon, type IconName } from '@/components/Icon'
 
-const FEATURES = [
-  { icon: '⏱', title: 'Tiempo real', desc: 'Integración RK4 a 60 fps con histórico de 30 fps' },
-  { icon: '🌊', title: '5 fluidos',   desc: 'Vacío, aire, agua, aceite y glicerina con drag físico' },
-  { icon: '🪐', title: '5 gravedades', desc: 'Luna, Marte, Medellín, Tierra y Júpiter' },
-  { icon: '📊', title: '4 gráficas',  desc: 'θ(t), ω(t), espacio fase y energía' },
-  { icon: '📐', title: 'Modo didáctico', desc: 'Vectores de torque, peso y péndulo equivalente' },
-  { icon: '⚡', title: 'Ligero',     desc: 'WebGL optimizado · funciona en cualquier portátil' },
+interface Feature {
+  icon: IconName
+  title: string
+  desc: string
+}
+
+const FEATURES: Feature[] = [
+  { icon: 'clock',         title: 'Tiempo real',     desc: 'Integración RK4 a 60 fps con histórico de 30 fps' },
+  { icon: 'wave',          title: '5 fluidos',        desc: 'Vacío, aire, agua, aceite y glicerina con drag físico' },
+  { icon: 'planet-rings',  title: '5 gravedades',     desc: 'Luna, Marte, Medellín, Tierra y Júpiter' },
+  { icon: 'bar-chart',     title: '4 gráficas',       desc: 'θ(t), ω(t), espacio fase y energía' },
+  { icon: 'compass',       title: 'Modo didáctico',   desc: 'Vectores de torque, peso y péndulo equivalente' },
+  { icon: 'bolt',          title: 'Ligero',           desc: 'WebGL optimizado · funciona en cualquier portátil' },
 ]
 
 export function SimulatorEmbed() {
@@ -57,9 +64,11 @@ export function SimulatorEmbed() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.4, delay: 0.05 * i, ease: 'easeOut' }}
-              className="flex items-start gap-2 rounded-lg border border-border-subtle/60 bg-white/50 px-3 py-2.5 backdrop-blur-sm"
+              className="flex items-start gap-2.5 rounded-lg border border-border-subtle/60 bg-white/50 px-3 py-2.5 backdrop-blur-sm"
             >
-              <span className="text-base leading-none">{f.icon}</span>
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-accent-orange">
+                <Icon name={f.icon} size={18} />
+              </span>
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-text-primary">{f.title}</p>
                 <p className="mt-0.5 text-[11px] leading-snug text-text-tertiary">{f.desc}</p>

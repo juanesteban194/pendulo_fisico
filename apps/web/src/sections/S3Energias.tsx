@@ -72,7 +72,7 @@ export function S3Energias() {
         number="3.4"
       />
 
-      <ConceptCard icon="🔄" title="Conservación: una de las leyes más profundas" color="green">
+      <ConceptCard icon="cycle" title="Conservación: una de las leyes más profundas" color="green">
         La energía no se crea ni se destruye — se transforma. Esta ley se cumple en sistemas tan
         distintos como una pelota cayendo, una reacción química o el universo entero. Aquí la ves
         en directo: <strong>Eₚ + Eₖ = constante</strong>. La fricción no la viola, solo cambia

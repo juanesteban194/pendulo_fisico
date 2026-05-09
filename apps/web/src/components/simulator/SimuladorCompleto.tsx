@@ -13,6 +13,7 @@ import { InfoDisplay }   from './ui/InfoDisplay'
 import { Charts }        from './ui/Charts'
 import { useSimulationStore, selectParams } from './store/simulationStore'
 import type { FluidId }  from '@pendulo/physics'
+import { Icon }          from '@/components/Icon'
 
 const SIDE_WIDTH    = '220px'
 const CHARTS_HEIGHT = '280px'
@@ -70,7 +71,8 @@ export function SimuladorCompleto() {
       <div style={s.leftCol}>
         {/* Hint de controles */}
         <div style={s.hint}>
-          <span>🖱 Rueda: zoom · Arrastre: mover · Doble clic: centrar</span>
+          <Icon name="mouse" size={11} strokeWidth={1.6} />
+          <span>Rueda: zoom · Arrastre: mover · Doble clic: centrar</span>
         </div>
 
         {/* Canvas de la escena 3D */}

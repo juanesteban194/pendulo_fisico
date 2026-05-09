@@ -196,6 +196,32 @@ a:focus-visible {
   outline-offset: 3px;
 }
 
+/* ─── KaTeX dentro de EquationBlock ────────────────────────────────────── */
+/* Escala ligeramente arriba el render por defecto y mejora la jerarquía
+ * tipográfica (variables en italic más marcado). */
+.eq-block .katex {
+  font-size: 1.18em;
+  color: rgb(var(--text-primary));
+}
+.eq-block .katex-display {
+  margin: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 2px;
+}
+.eq-block .katex-display > .katex {
+  display: inline-block;
+  text-align: center;
+  white-space: nowrap;
+}
+.eq-block .katex .mathnormal {
+  font-style: italic;
+}
+/* Scrollbar aún más fina dentro del display si la ecuación es muy ancha */
+.eq-block .katex-display::-webkit-scrollbar {
+  height: 4px;
+}
+
 /* ─── Animación shimmer para skeleton loaders ──────────────────────────── */
 @keyframes shimmer {
   0%   { background-position: -200% 0; }

@@ -11,6 +11,7 @@ import { InfoDisplay }   from './ui/InfoDisplay'
 import { Charts }        from './ui/Charts'
 import { useSimulationStore, selectParams } from './store/simulationStore'
 import type { FluidId }  from '@pendulo/physics'
+import { Icon }          from '@/components/Icon'
 
 const SIDEBAR = '320px'
 const CHARTS_H = '280px'
@@ -84,7 +85,8 @@ export function SimuladorFull() {
             <PendulumScene />
             <SceneOverlay />
             <div style={st.hint}>
-              <span>🖱 Rueda: zoom · Arrastre: mover · Doble clic: centrar</span>
+              <Icon name="mouse" size={12} strokeWidth={1.6} />
+              <span>Rueda: zoom · Arrastre: mover · Doble clic: centrar</span>
             </div>
           </main>
           <section style={st.chartsArea}>
@@ -154,6 +156,7 @@ const st: Record<string, CSSProperties> = {
   hint: {
     position: 'absolute', bottom: 10, left: '50%',
     transform: 'translateX(-50%)',
+    display: 'inline-flex', alignItems: 'center', gap: '6px',
     fontSize: '10px', color: '#94a3b8',
     background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(6px)',
     padding: '4px 10px', borderRadius: '999px',

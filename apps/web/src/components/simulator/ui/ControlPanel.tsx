@@ -6,6 +6,7 @@ import type { CSSProperties } from 'react'
 import { useSimulationStore, selectParams, selectRunning, selectShowAdvanced } from '../store/simulationStore'
 import { getAllFluids, LAB_PARAMS } from '@pendulo/physics'
 import type { FluidId } from '@pendulo/physics'
+import { Icon, type IconName } from '@/components/Icon'
 
 const T = {
   orange:  '#f97316', blue:    '#3b82f6', violet:  '#8b5cf6',
@@ -45,12 +46,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-const GRAVITY_PRESETS = [
-  { label: 'Luna',     g: 1.62,  icon: '🌙' },
-  { label: 'Marte',    g: 3.72,  icon: '🔴' },
-  { label: 'Medellín', g: 9.78,  icon: '🇨🇴' },
-  { label: 'Tierra',   g: 9.81,  icon: '🌍' },
-  { label: 'Júpiter',  g: 24.79, icon: '🪐' },
+const GRAVITY_PRESETS: { label: string; g: number; icon: IconName }[] = [
+  { label: 'Luna',     g: 1.62,  icon: 'moon' },
+  { label: 'Marte',    g: 3.72,  icon: 'mars' },
+  { label: 'Medellín', g: 9.78,  icon: 'pin' },
+  { label: 'Tierra',   g: 9.81,  icon: 'globe' },
+  { label: 'Júpiter',  g: 24.79, icon: 'jupiter' },
 ]
 
 const FLUID_ICONS: Record<FluidId, string> = {
@@ -86,7 +87,10 @@ export function ControlPanel() {
         style={{ ...s.didacticToggle, background: showAdvanced ? '#dbeafe' : '#f8fafc', borderColor: showAdvanced ? '#93c5fd' : T.border, color: showAdvanced ? '#1d4ed8' : T.muted }}
         title="Vectores de peso, torque, péndulo equivalente, envolvente exponencial"
       >
-        <span style={s.didacticLabel}>📐 Modo didáctico</span>
+        <span style={s.didacticLabel}>
+          <Icon name="compass" size={13} strokeWidth={1.7} />
+          Modo didáctico
+        </span>
         <span style={s.didacticState}>{showAdvanced ? 'activo' : 'off'}</span>
       </button>
 
@@ -125,7 +129,9 @@ export function ControlPanel() {
             return (
               <button key={label} style={{ ...s.presetBtn, ...(active ? s.presetBtnActive : {}) }}
                 onClick={() => setParams({ g })} title={`g = ${g} m/s²`}>
-                <span style={{ fontSize: '13px' }}>{icon}</span>
+                <span style={{ color: active ? T.teal : T.muted, lineHeight: 0 }}>
+                  <Icon name={icon} size={14} strokeWidth={1.7} />
+                </span>
                 <span style={{ fontSize: '9px', color: T.muted }}>{label}</span>
                 <span style={{ fontSize: '9px', color: active ? T.teal : T.dim, fontVariantNumeric: 'tabular-nums' }}>{g}</span>
               </button>
@@ -145,7 +151,7 @@ const s: Record<string, CSSProperties> = {
   iconBtn: { width: '28px', height: '26px', border: '1px solid', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 },
   labBtn: { width: 'auto', padding: '0 8px', fontSize: '10px', fontWeight: 700, background: '#f0fdf9', color: '#0d9488', borderColor: '#5eead4', letterSpacing: '0.03em' },
   didacticToggle: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 11px', marginTop: '4px', border: '1px solid', borderRadius: '7px', cursor: 'pointer', transition: 'all 0.15s' },
-  didacticLabel: { fontSize: '11px', fontWeight: 600 },
+  didacticLabel: { fontSize: '11px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' },
   didacticState: { fontSize: '9px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const },
   section: { display: 'flex', flexDirection: 'column', gap: '11px', padding: '11px 0', borderTop: `1px solid ${T.border}` },
   sectionTitle: { margin: 0, fontSize: '10px', fontWeight: 700, color: T.dim, textTransform: 'uppercase', letterSpacing: '0.1em' },

@@ -6,6 +6,7 @@
 
 import { motion, useReducedMotion } from 'framer-motion'
 import { type ReactNode } from 'react'
+import { Icon, type IconName } from './Icon'
 
 export type ConceptColor = 'orange' | 'blue' | 'purple' | 'green' | 'amber'
 
@@ -33,7 +34,7 @@ const COLOR_TOKEN: Record<ConceptColor, { bg: string; border: string; text: stri
 }
 
 export interface ConceptCardProps {
-  icon: string
+  icon: IconName
   title: string
   color?: ConceptColor
   children: ReactNode
@@ -56,12 +57,11 @@ export function ConceptCard({ icon, title, color = 'orange', children }: Concept
     >
       <div
         className={[
-          'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-lg',
-          c.iconBg,
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+          c.iconBg, c.text,
         ].join(' ')}
-        aria-hidden
       >
-        {icon}
+        <Icon name={icon} size={20} />
       </div>
       <div className="min-w-0 flex-1">
         <p className={['mb-1 text-sm font-semibold', c.text].join(' ')}>{title}</p>

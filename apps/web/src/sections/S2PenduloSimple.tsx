@@ -65,7 +65,7 @@ export function S2PenduloSimple() {
         number="2.3"
       />
 
-      <ConceptCard icon="🎯" title="Movimiento Armónico Simple (MAS)" color="purple">
+      <ConceptCard icon="target" title="Movimiento Armónico Simple (MAS)" color="purple">
         Cualquier sistema cuya ecuación de movimiento sea{' '}
         <code className="rounded bg-white/60 px-1 font-mono text-xs">ẍ + ω₀²x = 0</code>{' '}
         es un oscilador armónico. Se rige por <em>tres parámetros</em>: amplitud (cuánto se aleja del
