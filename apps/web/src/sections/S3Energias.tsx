@@ -3,6 +3,7 @@
 import { SectionShell, EquationBlock, DataReadout } from '@pendulo/ui'
 import { InlineStage } from '@/components/InlineStage'
 import { EnergyBarsChart } from '@/components/charts/EnergyBarsChart'
+import { ConceptCard } from '@/components/ConceptCard'
 
 // Datos del laboratorio — se calculan en servidor (Server Component)
 const L   = 0.25
@@ -70,6 +71,13 @@ export function S3Energias() {
         annotation="En ausencia de fricción, la energía total se conserva. Esta igualdad permite calcular la velocidad máxima sin resolver la EDO."
         number="3.4"
       />
+
+      <ConceptCard icon="🔄" title="Conservación: una de las leyes más profundas" color="green">
+        La energía no se crea ni se destruye — se transforma. Esta ley se cumple en sistemas tan
+        distintos como una pelota cayendo, una reacción química o el universo entero. Aquí la ves
+        en directo: <strong>Eₚ + Eₖ = constante</strong>. La fricción no la viola, solo cambia
+        parte a calor — energía aún, solo en otra forma.
+      </ConceptCard>
 
       {/* Gráfica dinámica */}
       <EnergyBarsChart />

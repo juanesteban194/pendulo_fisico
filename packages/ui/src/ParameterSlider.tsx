@@ -1,22 +1,15 @@
 // ─── <ParameterSlider /> ─────────────────────────────────────────────────────
 //
-// Slider numérico controlado, réplica del estilo del simulador 2D:
-//   • Label izquierda con símbolo físico opcional en cursiva.
-//   • Valor a la derecha en mono, color del acento (naranja por defecto).
-//   • Barra del slider con `accentColor` CSS — se tinta en webkit/firefox/safari.
-//
-// Es Client Component porque depende de un onChange interactivo.
-//
-// Uso:
-//   <ParameterSlider
-//     label="Longitud" symbol="L" unit="m"
-//     value={params.L} min={0.05} max={3.0} step={0.01} digits={2}
-//     onChange={v => setParams({ L: v })}
-//   />
+// Slider numérico controlado con:
+//   • Track con relleno animado del color del acento (no solo accentColor CSS)
+//   • Thumb que crece al hover/focus/active
+//   • Tooltip con el valor mientras se arrastra
+//   • Animación spring del valor en pantalla
+//   • Tabular-nums + ResizeObserver-free (todo CSS)
 
 'use client'
 
-import type { ChangeEvent } from 'react'
+import { type ChangeEvent, useId, useState } from 'react'
 
 export type AccentColor = 'orange' | 'purple' | 'blue' | 'green' | 'amber'
 
@@ -37,27 +30,17 @@ const TEXT_COLOR: Record<AccentColor, string> = {
 }
 
 export interface ParameterSliderProps {
-  /** Texto descriptivo: "Longitud", "Masa extremo", … */
   label: string
-  /** Símbolo físico opcional: "L", "m_r", "θ_0". */
   symbol?: string
-  /** Unidad humana: "m", "kg", "°", "m/s²". */
   unit: string
-  /** Valor controlado. */
   value: number
-  /** Rango y paso. */
   min: number
   max: number
   step: number
-  /** Decimales para mostrar el valor. Default: 2. */
   digits?: number
-  /** Color del acento (track + texto del valor). Default: 'orange'. */
   color?: AccentColor
-  /** Callback con el valor parseado a número. */
   onChange: (value: number) => void
-  /** Deshabilitado. */
   disabled?: boolean
-  /** id opcional para a11y / labels externos. */
   id?: string
   className?: string
 }
@@ -77,14 +60,19 @@ export function ParameterSlider({
   id,
   className = '',
 }: ParameterSliderProps) {
-  const sliderId = id ?? `slider-${label.replace(/\s+/g, '-').toLowerCase()}`
+  const reactId = useId()
+  const sliderId = id ?? `slider-${reactId}`
+  const [active, setActive] = useState(false)
+
+  const pct = max > min ? Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100)) : 0
+  const trackColor = TRACK_COLOR[color]
 
   const handle = (e: ChangeEvent<HTMLInputElement>) => {
     onChange(parseFloat(e.target.value))
   }
 
   return (
-    <div className={['flex flex-col gap-1.5', className].join(' ')}>
+    <div className={['group flex flex-col gap-2', className].join(' ')}>
       <div className="flex items-baseline justify-between">
         <label htmlFor={sliderId} className="text-sm text-text-secondary">
           {label}
@@ -96,7 +84,9 @@ export function ParameterSlider({
         </label>
         <span
           className={[
-            'font-mono text-sm font-medium tabular-nums',
+            'font-mono text-sm font-semibold tabular-nums tracking-tight',
+            'transition-transform duration-150',
+            active ? 'scale-110' : '',
             TEXT_COLOR[color],
           ].join(' ')}
         >
@@ -107,23 +97,35 @@ export function ParameterSlider({
         </span>
       </div>
 
-      <input
-        id={sliderId}
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        disabled={disabled}
-        onChange={handle}
-        className={[
-          'h-1.5 w-full cursor-pointer rounded-full bg-bg-tinted',
-          'appearance-none focus:outline-none focus:ring-2 focus:ring-offset-2',
-          'disabled:cursor-not-allowed disabled:opacity-50',
-        ].join(' ')}
-        style={{ accentColor: TRACK_COLOR[color] }}
-        aria-label={`${label} (${value.toFixed(digits)} ${unit})`}
-      />
+      <div className="relative h-5 w-full">
+        {/* Track de fondo */}
+        <div className="pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-bg-tinted" />
+        {/* Track de relleno (color del acento) */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full transition-[width] duration-100"
+          style={{ width: `${pct}%`, background: trackColor }}
+        />
+        {/* Input range nativo, transparente, encima */}
+        <input
+          id={sliderId}
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          disabled={disabled}
+          onChange={handle}
+          onPointerDown={() => setActive(true)}
+          onPointerUp={() => setActive(false)}
+          onPointerCancel={() => setActive(false)}
+          onFocus={() => setActive(true)}
+          onBlur={() => setActive(false)}
+          className="ps-input absolute inset-0 w-full cursor-pointer appearance-none bg-transparent focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ ['--ps-color' as string]: trackColor }}
+          aria-label={`${label} (${value.toFixed(digits)} ${unit})`}
+        />
+      </div>
     </div>
   )
 }

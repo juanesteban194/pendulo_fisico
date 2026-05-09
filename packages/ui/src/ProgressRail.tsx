@@ -68,19 +68,24 @@ export function ProgressRail({ sections, activeSlug, className = '' }: ProgressR
           const yPct  = sections.length === 1 ? 50 : (i / (sections.length - 1)) * 100
           const active = s.slug === activeSlug
           return (
-            <button
+            <motion.button
               key={s.slug}
               type="button"
               onClick={() => scrollToSlug(s.slug)}
               style={{ top: `${yPct}%` }}
               data-slug={s.slug}
+              whileHover={reduceMotion ? undefined : { scale: 1.4 }}
+              whileTap={reduceMotion ? undefined : { scale: 0.9 }}
+              animate={reduceMotion ? undefined : { scale: active ? 1.35 : 1 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
               className={[
                 'absolute left-1/2 -translate-x-1/2 -translate-y-1/2',
                 'flex items-center justify-center',
-                'h-3 w-3 rounded-full border-2 transition-colors',
+                'h-3 w-3 rounded-full border-2',
+                'transition-colors duration-200',
                 'focus:outline-none focus:ring-2 focus:ring-accent-orange focus:ring-offset-2',
                 active
-                  ? 'border-accent-orange bg-accent-orange shadow-md'
+                  ? 'border-accent-orange bg-accent-orange shadow-[0_0_0_4px_rgba(255,107,53,0.18)]'
                   : 'border-border-default bg-bg-surface hover:border-accent-orange',
               ].join(' ')}
               aria-label={`Ir a sección ${s.number}: ${s.title}`}

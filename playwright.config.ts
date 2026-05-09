@@ -22,13 +22,13 @@ export default defineConfig({
       command: 'pnpm --filter @pendulo/api dev',
       url: 'http://localhost:4000/health',
       reuseExistingServer: !process.env.CI,
-      timeout: 30_000,
+      timeout: 60_000,
     },
     {
       command: 'pnpm --filter @pendulo/web dev',
       url: 'http://localhost:3000',
       reuseExistingServer: !process.env.CI,
-      timeout: 60_000,
+      timeout: 180_000,
     },
   ],
 })

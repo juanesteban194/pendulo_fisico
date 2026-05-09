@@ -77,8 +77,6 @@
 }
 
 @layer components {
-  /* Etiqueta de sección estilo "PARÁMETROS" / "GEOMETRÍA DEL PÉNDULO"
-   * (replica del simulador 2D) */
   .ui-label {
     font-size: 11px;
     line-height: 14px;
@@ -88,11 +86,136 @@
     color: rgb(var(--text-label));
   }
 
-  /* Valor numérico tipo panel del simulador — naranja, mono, alineado a la
-   * derecha con su unidad gris a un lado. */
   .ui-numeric {
     font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
     font-feature-settings: 'tnum' 1;
     color: rgb(var(--accent-orange));
   }
+}
+
+/* ─── ParameterSlider thumb — webkit + firefox ─────────────────────────── */
+.ps-input::-webkit-slider-runnable-track {
+  height: 6px;
+  background: transparent;
+}
+.ps-input::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5px;
+  background: var(--ps-color, rgb(var(--accent-orange)));
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.18),
+    0 0 0 1px rgba(15, 23, 42, 0.06);
+  transition:
+    transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.18s ease;
+}
+.ps-input:hover::-webkit-slider-thumb {
+  transform: scale(1.18);
+}
+.ps-input:active::-webkit-slider-thumb,
+.ps-input:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.28);
+  box-shadow:
+    0 2px 6px rgba(15, 23, 42, 0.22),
+    0 0 0 6px color-mix(in srgb, var(--ps-color, rgb(var(--accent-orange))) 22%, transparent);
+}
+.ps-input::-moz-range-track {
+  height: 6px;
+  background: transparent;
+  border: none;
+}
+.ps-input::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--ps-color, rgb(var(--accent-orange)));
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.18),
+    0 0 0 1px rgba(15, 23, 42, 0.06);
+  transition:
+    transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.18s ease;
+}
+.ps-input:hover::-moz-range-thumb {
+  transform: scale(1.18);
+}
+.ps-input:active::-moz-range-thumb,
+.ps-input:focus-visible::-moz-range-thumb {
+  transform: scale(1.28);
+  box-shadow:
+    0 2px 6px rgba(15, 23, 42, 0.22),
+    0 0 0 6px color-mix(in srgb, var(--ps-color, rgb(var(--accent-orange))) 22%, transparent);
+}
+
+/* ─── Smooth scrolling global ──────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ─── Selección de texto ───────────────────────────────────────────────── */
+::selection {
+  background: rgba(255, 107, 53, 0.18);
+  color: rgb(var(--text-primary));
+}
+
+/* ─── Scrollbar minimalista ────────────────────────────────────────────── */
+@media (pointer: fine) {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.12);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(15, 23, 42, 0.22);
+    background-clip: content-box;
+  }
+}
+
+/* ─── Focus ring uniforme ──────────────────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid rgb(var(--accent-orange));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+button:focus-visible,
+a:focus-visible {
+  outline-offset: 3px;
+}
+
+/* ─── Animación shimmer para skeleton loaders ──────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(229, 233, 237, 0.4) 0%,
+    rgba(229, 233, 237, 0.8) 50%,
+    rgba(229, 233, 237, 0.4) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* ─── Honra reduced-motion en lo nuestro también ───────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .ps-input::-webkit-slider-thumb,
+  .ps-input::-moz-range-thumb { transition: none !important; }
+  .shimmer { animation: none !important; }
 }

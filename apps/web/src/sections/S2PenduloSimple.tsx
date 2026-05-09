@@ -5,6 +5,7 @@ import { InlineStage } from '@/components/InlineStage'
 import { NumericExercise, MultipleChoiceExercise } from '@/components/Exercises'
 import { SmallAngleChart } from '@/components/charts/SmallAngleChart'
 import { SimplePendulumSlider } from '@/sections/SimplePendulumSlider'
+import { ConceptCard } from '@/components/ConceptCard'
 
 export function S2PenduloSimple() {
   return (
@@ -63,6 +64,14 @@ export function S2PenduloSimple() {
         annotation="Versión linealizada (ángulos pequeños). Tiene solución analítica: θ(t) = θ₀ cos(ω₀ t)."
         number="2.3"
       />
+
+      <ConceptCard icon="🎯" title="Movimiento Armónico Simple (MAS)" color="purple">
+        Cualquier sistema cuya ecuación de movimiento sea{' '}
+        <code className="rounded bg-white/60 px-1 font-mono text-xs">ẍ + ω₀²x = 0</code>{' '}
+        es un oscilador armónico. Se rige por <em>tres parámetros</em>: amplitud (cuánto se aleja del
+        equilibrio), frecuencia angular ω₀ (qué tan rápido oscila) y fase (dónde empezó). Lo verás
+        en resortes, circuitos LC, vibraciones moleculares y hasta órbitas pequeñas.
+      </ConceptCard>
 
       {/* Período */}
       <h3 className="text-lg font-semibold text-text-primary">El período sorprendente</h3>
