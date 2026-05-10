@@ -1,8 +1,4 @@
 // ─── Gráfica: Ep / Ec / E_total vs tiempo ────────────────────────────────────
-//
-// Recharts line chart de un ciclo completo con los datos del laboratorio.
-// Data generada analíticamente (péndulo simple ideal, sin amortiguamiento)
-// para que sea precisa y ligera.
 
 'use client'
 
@@ -11,7 +7,6 @@ import {
   Legend, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
 
-// Datos del laboratorio
 const L   = 0.25
 const M   = 0.020 + 0.075
 const G   = 9.78
@@ -41,23 +36,29 @@ function generateEnergyData() {
 
 const DATA = generateEnergyData()
 const E_MAX = DATA[0]!.Et
+const TICK_COLOR = 'rgb(var(--text-tertiary))'
 
 export function EnergyBarsChart() {
   return (
     <div className="my-6 rounded-lg border border-border-subtle bg-bg-surface p-5 shadow-sm">
-      <p className="ui-label mb-3">Energía mecánica — péndulo del laboratorio (θ₀ = 5°)</p>
-      <ResponsiveContainer width="100%" height={220}>
-        <LineChart data={DATA} margin={{ top: 4, right: 16, bottom: 16, left: 0 }}>
+      <p className="ui-label mb-4">Energía mecánica — péndulo del laboratorio (θ₀ = 5°)</p>
+      <ResponsiveContainer width="100%" height={260}>
+        <LineChart data={DATA} margin={{ top: 8, right: 24, bottom: 36, left: 36 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--border-subtle))" />
           <XAxis
             dataKey="t"
-            label={{ value: 'tiempo (s)', position: 'insideBottom', offset: -8, fontSize: 11 }}
-            tick={{ fontSize: 11 }}
+            label={{ value: 'tiempo', position: 'insideBottom', offset: -22, fontSize: 11, fill: TICK_COLOR }}
+            tick={{ fontSize: 11, fill: TICK_COLOR }}
             tickFormatter={v => `${v}s`}
+            tickMargin={6}
+            stroke="rgb(var(--border-default))"
           />
           <YAxis
-            tick={{ fontSize: 11 }}
-            tickFormatter={v => `${(v * 1e4).toFixed(0)}µ`}
+            tick={{ fontSize: 11, fill: TICK_COLOR }}
+            tickFormatter={v => `${(v * 1e6).toFixed(0)}`}
+            tickMargin={6}
+            stroke="rgb(var(--border-default))"
+            label={{ value: 'energía (µJ)', angle: -90, position: 'insideLeft', offset: 14, fontSize: 11, fill: TICK_COLOR, style: { textAnchor: 'middle' } }}
           />
           <Tooltip
             formatter={(val: number, name: string) => [
@@ -65,16 +66,16 @@ export function EnergyBarsChart() {
               name === 'Ep' ? 'Potencial' : name === 'Ec' ? 'Cinética' : 'Total',
             ]}
             labelFormatter={v => `t = ${v} s`}
-            contentStyle={{ fontSize: 12 }}
+            contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid rgb(var(--border-subtle))' }}
           />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
+          <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} iconType="line" />
           <ReferenceLine y={E_MAX} stroke="rgb(var(--accent-green))" strokeDasharray="4 2" />
           <Line type="monotone" dataKey="Ep" name="Ep" stroke="rgb(var(--accent-amber))"  strokeWidth={2} dot={false} />
           <Line type="monotone" dataKey="Ec" name="Ec" stroke="rgb(var(--accent-blue))"   strokeWidth={2} dot={false} />
           <Line type="monotone" dataKey="Et" name="Et" stroke="rgb(var(--accent-green))"  strokeWidth={1.5} strokeDasharray="4 2" dot={false} />
         </LineChart>
       </ResponsiveContainer>
-      <p className="mt-2 text-center text-xs text-text-tertiary">
+      <p className="mt-3 text-center text-xs text-text-tertiary">
         Ep (ámbar) y Ec (azul) se intercambian continuamente.
         E_total (verde) permanece constante — conservación de la energía mecánica.
       </p>

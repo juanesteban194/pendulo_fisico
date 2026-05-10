@@ -1,7 +1,4 @@
 // ─── Gráfica: Euler explícito vs RK4 — deriva de energía ─────────────────────
-//
-// Muestra cuánto crece la energía total con Euler (deriva numérica)
-// frente a la estabilidad de RK4. Parametrizable con un slider de Δt.
 
 'use client'
 
@@ -75,6 +72,8 @@ const DT_OPTIONS = [
   { label: '100 ms',             value: 0.100 },
 ]
 
+const TICK_COLOR = 'rgb(var(--text-tertiary))'
+
 export function NumericalChart() {
   const [dtIdx, setDtIdx] = useState(1)
   const dt   = DT_OPTIONS[dtIdx]!.value
@@ -82,7 +81,7 @@ export function NumericalChart() {
 
   return (
     <div className="my-6 rounded-lg border border-border-subtle bg-bg-surface p-5 shadow-sm">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="ui-label">Deriva de energía: Euler vs RK4</p>
         <div className="flex items-center gap-2">
           <span className="text-xs text-text-secondary">Δt =</span>
@@ -97,32 +96,37 @@ export function NumericalChart() {
           </select>
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={220}>
-        <LineChart data={data} margin={{ top: 4, right: 16, bottom: 16, left: 0 }}>
+      <ResponsiveContainer width="100%" height={260}>
+        <LineChart data={data} margin={{ top: 8, right: 24, bottom: 36, left: 36 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--border-subtle))" />
           <XAxis
             dataKey="t"
-            label={{ value: 'tiempo (s)', position: 'insideBottom', offset: -8, fontSize: 11 }}
-            tick={{ fontSize: 11 }}
+            label={{ value: 'tiempo (s)', position: 'insideBottom', offset: -22, fontSize: 11, fill: TICK_COLOR }}
+            tick={{ fontSize: 11, fill: TICK_COLOR }}
+            tickMargin={6}
+            stroke="rgb(var(--border-default))"
           />
           <YAxis
-            tick={{ fontSize: 11 }}
+            tick={{ fontSize: 11, fill: TICK_COLOR }}
             tickFormatter={v => `${v.toFixed(2)}×`}
             domain={['auto', 'auto']}
+            tickMargin={6}
+            stroke="rgb(var(--border-default))"
+            label={{ value: 'E / E₀', angle: -90, position: 'insideLeft', offset: 14, fontSize: 11, fill: TICK_COLOR, style: { textAnchor: 'middle' } }}
           />
           <Tooltip
             formatter={(val: number, name: string) => [
               `${val.toFixed(4)} E₀`,
               name === 'euler' ? 'Euler explícito' : 'RK4',
             ]}
-            contentStyle={{ fontSize: 12 }}
+            contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid rgb(var(--border-subtle))' }}
           />
-          <Legend wrapperStyle={{ fontSize: 12 }} formatter={v => v === 'euler' ? 'Euler explícito' : 'RK4'} />
+          <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} iconType="line" formatter={v => v === 'euler' ? 'Euler explícito' : 'RK4'} />
           <Line type="monotone" dataKey="euler" name="euler" stroke="rgb(var(--status-error))"  strokeWidth={2} dot={false} />
           <Line type="monotone" dataKey="rk4"   name="rk4"   stroke="rgb(var(--accent-green))" strokeWidth={2} dot={false} />
         </LineChart>
       </ResponsiveContainer>
-      <p className="mt-2 text-center text-xs text-text-tertiary">
+      <p className="mt-3 text-center text-xs text-text-tertiary">
         Con Δt grande, Euler <span className="text-status-error">acumula error</span> y la energía crece sin fin.
         RK4 <span className="text-accent-green">permanece estable</span> incluso con Δt moderado.
       </p>
