@@ -57,7 +57,8 @@
       "Bash(node_modules/.bin/playwright.CMD test *)",
       "Bash(echo \"API started in background, PID: $!\")",
       "Bash(pnpm --filter @pendulo/web dev)",
-      "Bash(echo \"Web started in background, PID: $!\")"
+      "Bash(echo \"Web started in background, PID: $!\")",
+      "Bash(rm -rf c:/Users/juane/Downloads/pendulo_fisico/apps/simulator-2d)"
     ]
   }
 }

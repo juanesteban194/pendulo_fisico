@@ -2,8 +2,7 @@
 
 // ─── SIMULADOR EMBEBIDO EN LA SECCIÓN 8 ──────────────────────────────────────
 //
-// Adaptación de App.tsx de apps/simulator-2d para uso dentro de la plataforma
-// educativa. Layout en dos columnas: canvas+gráficas a la izquierda,
+// Layout en dos columnas: canvas+gráficas a la izquierda,
 // controles+info a la derecha. Altura fija de 620px para encajar en la sección.
 
 import type { CSSProperties } from 'react'
